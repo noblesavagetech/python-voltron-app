@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Enable SMS MFA - BBA Services{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
+
+    <h1>📱 Enable SMS MFA</h1>
+
+    {% if step == 2 %}
+    <div class="info-box success">
+        <p>✅ A 6-digit verification code has been sent to <strong>{{ phone }}</strong></p>
+        <p style="margin-bottom: 0; font-size: 14px;">Check your phone and enter the code below.</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.enable_mfa') }}" class="auth-form">
+        <input type="hidden" name="phone_hidden" value="{{ phone }}">
+        
+        <div class="form-group">
+            <label for="sms_code">Verification Code</label>
+            <input type="text" id="sms_code" name="sms_code" required maxlength="6" pattern="\d{6}" placeholder="Enter 6-digit code" autofocus>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large">Verify & Enable MFA</button>
+    </form>
+    {% else %}
+    <p class="subtitle">Add an extra layer of security to your account</p>
+
+    <div class="info-box">
+        <p><strong>How it works:</strong></p>
+        <ol style="margin: 10px 0; padding-left: 20px;">
+            <li>Enter your phone number</li>
+            <li>Receive a verification code via SMS</li>
+            <li>Enter the code to confirm</li>
+            <li>Use SMS codes when logging in</li>
+        </ol>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.enable_mfa') }}" class="auth-form">
+        <div class="form-group">
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone" name="phone" required placeholder="+1234567890" pattern="\+[0-9]{10,15}" autofocus>
+            <small>Include country code (e.g., +1 for US)</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-large">Send Verification Code</button>
+    </form>
+    {% endif %}
+</div>
+
+<style>
+.back-link {
+    display: inline-block;
+    color: #667eea;
+    text-decoration: none;
+    margin-bottom: 20px;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.info-box {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.info-box.success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.info-box ol {
+    color: #333;
+}
+</style>
+{% endblock %}

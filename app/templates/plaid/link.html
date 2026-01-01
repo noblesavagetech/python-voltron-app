@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Link Bank Account - BBA Services{% endblock %}
+
+{% block content %}
+<div class="link-container">
+    <h1>🏦 Link Your Bank Account</h1>
+    <p>Connect your bank account securely through Plaid to track your transactions and financial health.</p>
+    
+    <div class="link-box">
+        <h2>What You'll Need:</h2>
+        <ul>
+            <li>✅ Your bank login credentials</li>
+            <li>✅ Access to your phone (for bank verification)</li>
+            <li>✅ A few minutes to complete the process</li>
+        </ul>
+        
+        <div class="security-note">
+            <p><strong>🔒 Your data is secure:</strong></p>
+            <p>We use Plaid, a trusted financial data platform used by thousands of apps. We never see or store your bank login credentials.</p>
+        </div>
+        
+        <button id="link-button" class="btn btn-primary btn-large">Connect Bank Account</button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</div>
+
+<style>
+.link-container {
+    max-width: 600px;
+    margin: 40px auto;
+    text-align: center;
+}
+
+.link-container h1 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.link-container > p {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 40px;
+}
+
+.link-box {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.link-box h2 {
+    color: #333;
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.link-box ul {
+    text-align: left;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 30px 0;
+}
+
+.link-box li {
+    padding: 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.security-note {
+    background: #f0f9ff;
+    border-left: 4px solid #3b82f6;
+    padding: 20px;
+    margin: 30px 0;
+    text-align: left;
+}
+
+.security-note p {
+    margin: 5px 0;
+    color: #333;
+    font-size: 14px;
+}
+
+.security-note strong {
+    color: #3b82f6;
+}
+
+.btn-large {
+    padding: 15px 40px;
+    font-size: 18px;
+    margin: 10px;
+}
+</style>
+
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const linkButton = document.getElementById('link-button');
+        const linkToken = '{{ link_token }}';
+        
+        if (!linkToken) {
+            linkButton.disabled = true;
+            linkButton.textContent = 'Unable to initialize Plaid';
+            return;
+        }
+        
+        const handler = Plaid.create({
+            token: linkToken,
+            onSuccess: function(public_token, metadata) {
+                // Send the public_token to the server
+                fetch('{{ url_for("plaid.callback") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        public_token: public_token,
+                        metadata: metadata
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '{{ url_for("main.dashboard") }}';
+                    } else {
+                        alert('Failed to link account: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while linking your account.');
+                });
+            },
+            onExit: function(err, metadata) {
+                if (err != null) {
+                    console.error('Plaid Link Error:', err);
+                }
+                // User exited the Link flow
+            },
+            onEvent: function(eventName, metadata) {
+                // Optional: track Plaid Link events
+                console.log('Plaid Link Event:', eventName, metadata);
+            }
+        });
+        
+        linkButton.addEventListener('click', function() {
+            handler.open();
+        });
+    });
+</script>
+{% endblock %}

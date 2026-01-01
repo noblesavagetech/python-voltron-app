@@ -1,0 +1,51 @@
+"""
+BBA Services - Flask App with Email Verification, MFA, and Health Assessment
+Main application package
+"""
+import os
+from flask import Flask
+from flask_login import LoginManager
+from app.models import db, User
+from app.routes.auth import auth_bp
+from app.routes.main import main_bp
+from app.routes.questionnaire import questionnaire_bp
+from app.routes.plaid import plaid_bp
+from app.config import Config
+
+
+def create_app():
+    """Application factory pattern"""
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    
+    # Initialize database (no migrations - just connection setup)
+    db.init_app(app)
+    
+    # Create tables on first request if they don't exist
+    @app.before_request
+    def create_tables():
+        if not getattr(app, '_tables_created', False):
+            app._tables_created = True
+            try:
+                db.create_all()
+                print("Database tables ready")
+            except Exception as e:
+                print(f"Table note: {e}")
+    
+    # Initialize Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        return User.query.get(int(user_id))
+    
+    # Register blueprints
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(main_bp)
+    app.register_blueprint(questionnaire_bp, url_prefix='/questionnaire')
+    app.register_blueprint(plaid_bp, url_prefix='/plaid')
+    
+    return app

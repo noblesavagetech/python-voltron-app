@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In - BBA Services{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to your BBA Services account</p>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+        <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="you@example.com" value="{{ email or '' }}" {% if require_mfa %}readonly{% endif %} {% if not require_mfa %}autofocus{% endif %}>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password" {% if require_mfa %}readonly{% endif %}>
+        </div>
+
+        {% if require_mfa %}
+        <div class="form-group">
+            <label for="sms_code">SMS Code</label>
+            <input type="text" id="sms_code" name="sms_code" required maxlength="6" pattern="\d{6}" placeholder="Enter 6-digit code from SMS" autofocus>
+            <small>A verification code has been sent to your phone.</small>
+        </div>
+
+        <div class="form-footer">
+            <a href="#" onclick="document.getElementById('resend-form').submit(); return false;">Resend Code</a>
+        </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-primary btn-large">
+            {% if require_mfa %}Verify & Sign In{% else %}Sign In{% endif %}
+        </button>
+
+        {% if not require_mfa %}
+        <p class="form-footer">
+            Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up here</a>
+        </p>
+        {% endif %}
+    </form>
+
+    {% if require_mfa %}
+    <form id="resend-form" method="POST" action="{{ url_for('auth.request_sms_code') }}" style="display: none;">
+        <input type="hidden" name="email" value="{{ email }}">
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

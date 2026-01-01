@@ -1,0 +1,2632 @@
+# Integrated Financial Dashboard Application
+
+## Analysis of Repositories
+
+Based on your requirements and the search results, I'll design an integrated application that combines:
+
+1. **python-webapp** - Landing/authentication base
+2. **python-webapp-dashboard** - Financial dashboard with Plaid
+3. **python-webapp-plaid-mfa** - Email verification + 2FA (Vonage)
+
+---
+
+## Site Map & User Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              SITE ARCHITECTURE                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────┐
+                                    │  START   │
+                                    └────┬─────┘
+                                         │
+                                         ▼
+                              ┌─────────────────────┐
+                              │    Landing Page     │
+                              │      /home          │
+                              └──────────┬──────────┘
+                                         │
+                    ┌────────────────────┼────────────────────┐
+                    │                    │                    │
+                    ▼                    ▼                    ▼
+           ┌───────────────┐   ┌───────────────┐    ┌───────────────┐
+           │    Sign Up    │   │    Sign In    │    │    About      │
+           │   /register   │   │    /login     │    │    /about     │
+           └───────┬───────┘   └───────┬───────┘    └───────────────┘
+                   │                   │
+                   ▼                   │
+        ┌─────────────────────┐        │
+        │  Email Verification │        │
+        │  /verify-email      │        │
+        └──────────┬──────────┘        │
+                   │                   │
+                   ▼                   │
+        ┌─────────────────────┐        │
+        │ Verification Success│        │
+        │ /email-confirmed    │        │
+        └──────────┬──────────┘        │
+                   │                   │
+                   └─────────┬─────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │   2FA Challenge     │
+                  │   /mfa/verify       │
+                  │   (Vonage SMS/Voice)│
+                  └──────────┬──────────┘
+                             │
+                             ▼
+                  ┌─────────────────────┐
+                  │   Main Dashboard    │
+                  │   /dashboard        │
+                  └──────────┬──────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+         ▼                   ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
+│  Link Bank      │ │  Transactions   │ │   Settings      │
+│  /plaid/link    │ │  /transactions  │ │   /settings     │
+│  (Plaid Link)   │ │                 │ │                 │
+└────────┬────────┘ └────────┬────────┘ └────────┬────────┘
+         │                   │                   │
+         ▼                   │                   │
+┌─────────────────┐          │          ┌───────────────────┐
+│  2FA Required   │          │          │  MFA Settings     │
+│  for Bank Link  │          │          │  /settings/mfa    │
+│  /mfa/bank-auth │          │          └───────────────────┘
+└────────┬────────┘          │
+         │                   │
+         ▼                   ▼
+┌─────────────────┐ ┌─────────────────┐
+│  Accounts View  │ │  Transaction    │
+│  /accounts      │ │  Details        │
+│                 │ │  /tx/<id>       │
+└─────────────────┘ └─────────────────┘
+```
+
+---
+
+## Project Structure
+
+```
+fintrack/
+├── app/
+│   ├── __init__.py              # Flask app factory
+│   ├── config.py                # Configuration settings
+│   ├── extensions.py            # Flask extensions initialization
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── user.py              # User model
+│   │   ├── account.py           # Bank account model
+│   │   ├── transaction.py       # Transaction model
+│   │   └── mfa.py               # MFA session model
+│   │
+│   ├── auth/
+│   │   ├── __init__.py
+│   │   ├── routes.py            # Login, register, logout
+│   │   ├── forms.py             # WTForms for auth
+│   │   └── utils.py             # Password hashing, tokens
+│   │
+│   ├── mfa/
+│   │   ├── __init__.py
+│   │   ├── routes.py            # MFA verification routes
+│   │   ├── vonage_service.py    # Vonage SMS/Voice integration
+│   │   └── utils.py             # OTP generation, validation
+│   │
+│   ├── email/
+│   │   ├── __init__.py
+│   │   ├── routes.py            # Email verification routes
+│   │   └── service.py           # Email sending (SMTP/SendGrid)
+│   │
+│   ├── plaid_integration/
+│   │   ├── __init__.py
+│   │   ├── routes.py            # Plaid Link, webhooks
+│   │   ├── service.py           # Plaid API calls
+│   │   └── utils.py             # Token management
+│   │
+│   ├── dashboard/
+│   │   ├── __init__.py
+│   │   ├── routes.py            # Dashboard views
+│   │   └── utils.py             # Data aggregation
+│   │
+│   ├── templates/
+│   │   ├── base.html
+│   │   ├── auth/
+│   │   │   ├── login.html
+│   │   │   ├── register.html
+│   │   │   └── verify_email.html
+│   │   ├── mfa/
+│   │   │   ├── setup.html
+│   │   │   ├── verify.html
+│   │   │   └── bank_auth.html
+│   │   ├── dashboard/
+│   │   │   ├── index.html
+│   │   │   ├── accounts.html
+│   │   │   └── transactions.html
+│   │   └── plaid/
+│   │       └── link.html
+│   │
+│   └── static/
+│       ├── css/
+│       │   └── styles.css
+│       └── js/
+│           ├── plaid-link.js
+│           └── mfa.js
+│
+├── migrations/                   # Flask-Migrate files
+├── tests/
+├── .env.example
+├── requirements.txt
+├── docker-compose.yml
+└── run.py
+```
+
+---
+
+## Core Application Code
+
+### 1. Configuration (`app/config.py`)
+
+```python
+import os
+from datetime import timedelta
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    """Base configuration"""
+    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///fintrack.db')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Session
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Email Configuration
+    MAIL_SERVER = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.getenv('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.getenv('MAIL_DEFAULT_SENDER')
+    
+    # Vonage (MFA)
+    VONAGE_API_KEY = os.getenv('VONAGE_API_KEY')
+    VONAGE_API_SECRET = os.getenv('VONAGE_API_SECRET')
+    VONAGE_APPLICATION_ID = os.getenv('VONAGE_APPLICATION_ID')
+    VONAGE_PRIVATE_KEY_PATH = os.getenv('VONAGE_PRIVATE_KEY_PATH')
+    VONAGE_BRAND_NAME = os.getenv('VONAGE_BRAND_NAME', 'FinTrack')
+    
+    # Plaid
+    PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
+    PLAID_SECRET = os.getenv('PLAID_SECRET')
+    PLAID_ENV = os.getenv('PLAID_ENV', 'sandbox')  # sandbox, development, production
+    PLAID_PRODUCTS = os.getenv('PLAID_PRODUCTS', 'transactions,auth,identity').split(',')
+    PLAID_COUNTRY_CODES = os.getenv('PLAID_COUNTRY_CODES', 'US').split(',')
+    
+    # MFA Settings
+    MFA_CODE_LENGTH = 6
+    MFA_CODE_EXPIRY_MINUTES = 10
+    MFA_REQUIRED_FOR_BANK_LINK = True
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+    SESSION_COOKIE_SECURE = False
+
+
+class ProductionConfig(Config):
+    DEBUG = False
+
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+
+
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
+```
+
+### 2. Flask App Factory (`app/__init__.py`)
+
+```python
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_login import LoginManager
+from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
+
+from app.config import config
+
+# Initialize extensions
+db = SQLAlchemy()
+migrate = Migrate()
+login_manager = LoginManager()
+mail = Mail()
+csrf = CSRFProtect()
+
+
+def create_app(config_name='default'):
+    """Application factory pattern"""
+    app = Flask(__name__)
+    app.config.from_object(config[config_name])
+    
+    # Initialize extensions with app
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    mail.init_app(app)
+    csrf.init_app(app)
+    
+    # Configure login manager
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
+    
+    # Register blueprints
+    from app.auth import auth_bp
+    from app.mfa import mfa_bp
+    from app.email import email_bp
+    from app.plaid_integration import plaid_bp
+    from app.dashboard import dashboard_bp
+    from app.main import main_bp
+    
+    app.register_blueprint(main_bp)
+    app.register_blueprint(auth_bp, url_prefix='/auth')
+    app.register_blueprint(mfa_bp, url_prefix='/mfa')
+    app.register_blueprint(email_bp, url_prefix='/email')
+    app.register_blueprint(plaid_bp, url_prefix='/plaid')
+    app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
+    
+    # Register error handlers
+    register_error_handlers(app)
+    
+    return app
+
+
+def register_error_handlers(app):
+    """Register custom error handlers"""
+    from flask import render_template
+    
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
+```
+
+### 3. User Model (`app/models/user.py`)
+
+```python
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from itsdangerous import URLSafeTimedSerializer
+from flask import current_app
+
+from app import db, login_manager
+
+
+class User(UserMixin, db.Model):
+    """User model with email verification and MFA support"""
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
+    phone_number = db.Column(db.String(20))
+    
+    # Email verification
+    email_verified = db.Column(db.Boolean, default=False)
+    email_verified_at = db.Column(db.DateTime)
+    
+    # MFA settings
+    mfa_enabled = db.Column(db.Boolean, default=False)
+    mfa_method = db.Column(db.String(20), default='sms')  # sms, voice, email
+    mfa_verified_at = db.Column(db.DateTime)
+    
+    # Account status
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    last_login_at = db.Column(db.DateTime)
+    
+    # Relationships
+    accounts = db.relationship('BankAccount', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    mfa_sessions = db.relationship('MFASession', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<User {self.email}>'
+    
+    def set_password(self, password):
+        """Hash and set password"""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Verify password"""
+        return check_password_hash(self.password_hash, password)
+    
+    def generate_email_token(self):
+        """Generate email verification token"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps(self.email, salt='email-verification')
+    
+    @staticmethod
+    def verify_email_token(token, expiration=3600):
+        """Verify email token (default 1 hour expiry)"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = serializer.loads(token, salt='email-verification', max_age=expiration)
+            return email
+        except Exception:
+            return None
+    
+    def generate_reset_token(self):
+        """Generate password reset token"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return serializer.dumps(self.email, salt='password-reset')
+    
+    @staticmethod
+    def verify_reset_token(token, expiration=3600):
+        """Verify password reset token"""
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            email = serializer.loads(token, salt='password-reset', max_age=expiration)
+            return email
+        except Exception:
+            return None
+    
+    @property
+    def full_name(self):
+        """Return full name"""
+        if self.first_name and self.last_name:
+            return f'{self.first_name} {self.last_name}'
+        return self.email.split('@')[0]
+    
+    def requires_mfa(self):
+        """Check if user needs MFA verification"""
+        return self.mfa_enabled and self.phone_number
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    """Load user by ID for Flask-Login"""
+    return User.query.get(int(user_id))
+```
+
+### 4. MFA Session Model (`app/models/mfa.py`)
+
+```python
+from datetime import datetime, timedelta
+from flask import current_app
+import secrets
+
+from app import db
+
+
+class MFASession(db.Model):
+    """MFA verification session model"""
+    __tablename__ = 'mfa_sessions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Session details
+    session_token = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    verification_code = db.Column(db.String(10), nullable=False)
+    
+    # Purpose: login, bank_link, settings_change
+    purpose = db.Column(db.String(30), nullable=False, default='login')
+    
+    # Status
+    is_verified = db.Column(db.Boolean, default=False)
+    attempts = db.Column(db.Integer, default=0)
+    max_attempts = db.Column(db.Integer, default=3)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    verified_at = db.Column(db.DateTime)
+    
+    # Vonage request ID for tracking
+    vonage_request_id = db.Column(db.String(100))
+    
+    def __repr__(self):
+        return f'<MFASession {self.session_token[:8]}...>'
+    
+    @classmethod
+    def create_session(cls, user_id, purpose='login'):
+        """Create a new MFA session"""
+        expiry_minutes = current_app.config.get('MFA_CODE_EXPIRY_MINUTES', 10)
+        code_length = current_app.config.get('MFA_CODE_LENGTH', 6)
+        
+        session = cls(
+            user_id=user_id,
+            session_token=secrets.token_urlsafe(32),
+            verification_code=cls.generate_code(code_length),
+            purpose=purpose,
+            expires_at=datetime.utcnow() + timedelta(minutes=expiry_minutes)
+        )
+        
+        db.session.add(session)
+        db.session.commit()
+        
+        return session
+    
+    @staticmethod
+    def generate_code(length=6):
+        """Generate a numeric verification code"""
+        return ''.join([str(secrets.randbelow(10)) for _ in range(length)])
+    
+    def is_expired(self):
+        """Check if session has expired"""
+        return datetime.utcnow() > self.expires_at
+    
+    def is_locked(self):
+        """Check if session is locked due to too many attempts"""
+        return self.attempts >= self.max_attempts
+    
+    def verify_code(self, code):
+        """Verify the provided code"""
+        if self.is_expired():
+            return False, 'Code has expired. Please request a new one.'
+        
+        if self.is_locked():
+            return False, 'Too many attempts. Please request a new code.'
+        
+        if self.is_verified:
+            return False, 'This code has already been used.'
+        
+        self.attempts += 1
+        
+        if self.verification_code == code:
+            self.is_verified = True
+            self.verified_at = datetime.utcnow()
+            db.session.commit()
+            return True, 'Verification successful.'
+        
+        db.session.commit()
+        remaining = self.max_attempts - self.attempts
+        return False, f'Invalid code. {remaining} attempts remaining.'
+    
+    @classmethod
+    def cleanup_expired(cls):
+        """Remove expired sessions"""
+        expired = cls.query.filter(cls.expires_at < datetime.utcnow()).all()
+        for session in expired:
+            db.session.delete(session)
+        db.session.commit()
+```
+
+### 5. Bank Account & Transaction Models (`app/models/account.py`, `app/models/transaction.py`)
+
+```python
+# app/models/account.py
+from datetime import datetime
+from app import db
+
+
+class BankAccount(db.Model):
+    """Bank account linked via Plaid"""
+    __tablename__ = 'bank_accounts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Plaid identifiers
+    plaid_item_id = db.Column(db.String(100), nullable=False)
+    plaid_account_id = db.Column(db.String(100), unique=True, nullable=False)
+    plaid_access_token = db.Column(db.String(200), nullable=False)  # Encrypt in production!
+    
+    # Account details
+    institution_id = db.Column(db.String(50))
+    institution_name = db.Column(db.String(100))
+    account_name = db.Column(db.String(100))
+    account_type = db.Column(db.String(50))  # checking, savings, credit, etc.
+    account_subtype = db.Column(db.String(50))
+    mask = db.Column(db.String(10))  # Last 4 digits
+    
+    # Balances
+    current_balance = db.Column(db.Float, default=0.0)
+    available_balance = db.Column(db.Float, default=0.0)
+    credit_limit = db.Column(db.Float)
+    
+    # Status
+    is_active = db.Column(db.Boolean, default=True)
+    last_synced_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    transactions = db.relationship('Transaction', backref='account', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<BankAccount {self.institution_name} - {self.mask}>'
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'institution_name': self.institution_name,
+            'account_name': self.account_name,
+            'account_type': self.account_type,
+            'mask': self.mask,
+            'current_balance': self.current_balance,
+            'available_balance': self.available_balance,
+            'last_synced_at': self.last_synced_at.isoformat() if self.last_synced_at else None
+        }
+
+
+# app/models/transaction.py
+from datetime import datetime
+from app import db
+
+
+class Transaction(db.Model):
+    """Financial transaction from Plaid"""
+    __tablename__ = 'transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('bank_accounts.id'), nullable=False)
+    
+    # Plaid identifiers
+    plaid_transaction_id = db.Column(db.String(100), unique=True, nullable=False)
+    
+    # Transaction details
+    name = db.Column(db.String(200), nullable=False)
+    merchant_name = db.Column(db.String(200))
+    amount = db.Column(db.Float, nullable=False)
+    currency_code = db.Column(db.String(10), default='USD')
+    
+    # Categorization
+    category = db.Column(db.String(100))
+    category_id = db.Column(db.String(50))
+    primary_category = db.Column(db.String(100))
+    detailed_category = db.Column(db.String(100))
+    
+    # Date/time
+    date = db.Column(db.Date, nullable=False, index=True)
+    datetime_posted = db.Column(db.DateTime)
+    authorized_date = db.Column(db.Date)
+    
+    # Status
+    pending = db.Column(db.Boolean, default=False)
+    payment_channel = db.Column(db.String(50))  # online, in store, etc.
+    
+    # Location (optional)
+    location_address = db.Column(db.String(200))
+    location_city = db.Column(db.String(100))
+    location_region = db.Column(db.String(50))
+    location_postal_code = db.Column(db.String(20))
+    location_country = db.Column(db.String(10))
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Transaction {self.name} ${self.amount}>'
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'merchant_name': self.merchant_name,
+            'amount': self.amount,
+            'category': self.category,
+            'date': self.date.isoformat(),
+            'pending': self.pending,
+            'payment_channel': self.payment_channel
+        }
+```
+
+### 6. Vonage MFA Service (`app/mfa/vonage_service.py`)
+
+```python
+from vonage import Auth, Vonage
+from vonage_verify import VerifyRequest, SmsChannel, VoiceChannel
+from flask import current_app
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class VonageMFAService:
+    """Service for handling MFA via Vonage Verify API"""
+    
+    def __init__(self):
+        self._client = None
+    
+    @property
+    def client(self):
+        """Lazy initialization of Vonage client"""
+        if self._client is None:
+            auth = Auth(
+                api_key=current_app.config['VONAGE_API_KEY'],
+                api_secret=current_app.config['VONAGE_API_SECRET']
+            )
+            self._client = Vonage(auth)
+        return self._client
+    
+    def send_verification(self, phone_number, method='sms', brand_name=None):
+        """
+        Send verification code via SMS or Voice
+        
+        Args:
+            phone_number: User's phone number (E.164 format)
+            method: 'sms' or 'voice'
+            brand_name: Brand name shown in message
+            
+        Returns:
+            dict: {'success': bool, 'request_id': str, 'error': str}
+        """
+        brand = brand_name or current_app.config.get('VONAGE_BRAND_NAME', 'FinTrack')
+        
+        try:
+            # Build workflow based on method
+            if method == 'voice':
+                workflow = [VoiceChannel(to=phone_number)]
+            else:
+                workflow = [SmsChannel(to=phone_number)]
+            
+            verify_request = VerifyRequest(
+                brand=brand,
+                workflow=workflow
+            )
+            
+            response = self.client.verify.start_verification(verify_request)
+            
+            logger.info(f"Verification sent to {phone_number[-4:]} via {method}")
+            
+            return {
+                'success': True,
+                'request_id': response.request_id,
+                'error': None
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to send verification: {str(e)}")
+            return {
+                'success': False,
+                'request_id': None,
+                'error': str(e)
+            }
+    
+    def check_verification(self, request_id, code):
+        """
+        Verify the code entered by user
+        
+        Args:
+            request_id: The verification request ID from send_verification
+            code: The code entered by the user
+            
+        Returns:
+            dict: {'success': bool, 'error': str}
+        """
+        try:
+            response = self.client.verify.check_code(
+                request_id=request_id,
+                code=code
+            )
+            
+            logger.info(f"Verification successful for request {request_id[:8]}...")
+            
+            return {
+                'success': True,
+                'error': None
+            }
+            
+        except Exception as e:
+            logger.error(f"Verification failed: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def cancel_verification(self, request_id):
+        """Cancel an ongoing verification request"""
+        try:
+            self.client.verify.cancel_verification(request_id=request_id)
+            return {'success': True}
+        except Exception as e:
+            logger.error(f"Failed to cancel verification: {str(e)}")
+            return {'success': False, 'error': str(e)}
+
+
+# Singleton instance
+vonage_mfa = VonageMFAService()
+```
+
+### 7. MFA Routes (`app/mfa/routes.py`)
+
+```python
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask_login import login_required, current_user, login_user
+from functools import wraps
+
+from app import db
+from app.models.user import User
+from app.models.mfa import MFASession
+from app.mfa.vonage_service import vonage_mfa
+from app.mfa.forms import MFAVerifyForm, MFASetupForm
+
+mfa_bp = Blueprint('mfa', __name__)
+
+
+def mfa_required(f):
+    """Decorator to require MFA verification for sensitive actions"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        
+        if current_user.mfa_enabled:
+            # Check if MFA was recently verified
+            mfa_verified = session.get('mfa_verified')
+            if not mfa_verified:
+                session['mfa_next'] = request.url
+                return redirect(url_for('mfa.verify', purpose='action'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@mfa_bp.route('/setup', methods=['GET', 'POST'])
+@login_required
+def setup():
+    """Setup MFA for user account"""
+    form = MFASetupForm()
+    
+    if form.validate_on_submit():
+        phone_number = form.phone_number.data
+        method = form.method.data
+        
+        # Update user's phone number
+        current_user.phone_number = phone_number
+        current_user.mfa_method = method
+        db.session.commit()
+        
+        # Send verification to confirm phone number
+        result = vonage_mfa.send_verification(phone_number, method)
+        
+        if result['success']:
+            # Create MFA session
+            mfa_session = MFASession.create_session(
+                user_id=current_user.id,
+                purpose='setup'
+            )
+            mfa_session.vonage_request_id = result['request_id']
+            db.session.commit()
+            
+            session['mfa_setup_token'] = mfa_session.session_token
+            flash('Verification code sent! Please enter it below.', 'success')
+            return redirect(url_for('mfa.verify_setup'))
+        else:
+            flash(f'Failed to send verification: {result["error"]}', 'danger')
+    
+    return render_template('mfa/setup.html', form=form)
+
+
+@mfa_bp.route('/verify-setup', methods=['GET', 'POST'])
+@login_required
+def verify_setup():
+    """Verify phone number during MFA setup"""
+    token = session.get('mfa_setup_token')
+    if not token:
+        return redirect(url_for('mfa.setup'))
+    
+    mfa_session = MFASession.query.filter_by(
+        session_token=token,
+        user_id=current_user.id
+    ).first()
+    
+    if not mfa_session or mfa_session.is_expired():
+        flash('Session expired. Please try again.', 'warning')
+        return redirect(url_for('mfa.setup'))
+    
+    form = MFAVerifyForm()
+    
+    if form.validate_on_submit():
+        code = form.code.data
+        
+        # Verify with Vonage
+        result = vonage_mfa.check_verification(
+            mfa_session.vonage_request_id,
+            code
+        )
+        
+        if result['success']:
+            # Enable MFA for user
+            current_user.mfa_enabled = True
+            mfa_session.is_verified = True
+            db.session.commit()
+            
+            session.pop('mfa_setup_token', None)
+            flash('MFA has been enabled successfully!', 'success')
+            return redirect(url_for('dashboard.index'))
+        else:
+            flash(f'Verification failed: {result["error"]}', 'danger')
+    
+    return render_template('mfa/verify.html', form=form, purpose='setup')
+
+
+@mfa_bp.route('/verify', methods=['GET', 'POST'])
+def verify():
+    """MFA verification during login or sensitive actions"""
+    purpose = request.args.get('purpose', 'login')
+    
+    # For login flow, user info is in session
+    if purpose == 'login':
+        user_id = session.get('mfa_user_id')
+        if not user_id:
+            return redirect(url_for('auth.login'))
+        user = User.query.get(user_id)
+    else:
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        user = current_user
+    
+    # Check for existing MFA session or create new one
+    token = session.get('mfa_session_token')
+    mfa_session = None
+    
+    if token:
+        mfa_session = MFASession.query.filter_by(
+            session_token=token,
+            user_id=user.id
+        ).first()
+    
+    if not mfa_session or mfa_session.is_expired():
+        # Send new verification code
+        result = vonage_mfa.send_verification(
+            user.phone_number,
+            user.mfa_method
+        )
+        
+        if result['success']:
+            mfa_session = MFASession.create_session(
+                user_id=user.id,
+                purpose=purpose
+            )
+            mfa_session.vonage_request_id = result['request_id']
+            db.session.commit()
+            
+            session['mfa_session_token'] = mfa_session.session_token
+            flash('Verification code sent to your phone.', 'info')
+        else:
+            flash(f'Failed to send code: {result["error"]}', 'danger')
+            return redirect(url_for('auth.login'))
+    
+    form = MFAVerifyForm()
+    
+    if form.validate_on_submit():
+        code = form.code.data
+        
+        result = vonage_mfa.check_verification(
+            mfa_session.vonage_request_id,
+            code
+        )
+        
+        if result['success']:
+            mfa_session.is_verified = True
+            db.session.commit()
+            
+            session.pop('mfa_session_token', None)
+            
+            if purpose == 'login':
+                # Complete login
+                session.pop('mfa_user_id', None)
+                login_user(user)
+                user.last_login_at = db.func.now()
+                db.session.commit()
+                
+                flash('Login successful!', 'success')
+                next_page = session.pop('mfa_next', None)
+                return redirect(next_page or url_for('dashboard.index'))
+            else:
+                # Mark MFA as verified for this session
+                session['mfa_verified'] = True
+                next_page = session.pop('mfa_next', None)
+                return redirect(next_page or url_for('dashboard.index'))
+        else:
+            flash(f'Invalid code: {result["error"]}', 'danger')
+    
+    return render_template('mfa/verify.html', form=form, purpose=purpose)
+
+
+@mfa_bp.route('/resend', methods=['POST'])
+def resend():
+    """Resend verification code"""
+    token = session.get('mfa_session_token') or session.get('mfa_setup_token')
+    
+    if not token:
+        flash('No active verification session.', 'warning')
+        return redirect(url_for('auth.login'))
+    
+    mfa_session = MFASession.query.filter_by(session_token=token).first()
+    
+    if mfa_session:
+        user = User.query.get(mfa_session.user_id)
+        
+        # Cancel old verification
+        if mfa_session.vonage_request_id:
+            vonage_mfa.cancel_verification(mfa_session.vonage_request_id)
+        
+        # Send new code
+        result = vonage_mfa.send_verification(
+            user.phone_number,
+            user.mfa_method
+        )
+        
+        if result['success']:
+            mfa_session.vonage_request_id = result['request_id']
+            mfa_session.attempts = 0
+            db.session.commit()
+            flash('New verification code sent!', 'success')
+        else:
+            flash(f'Failed to resend: {result["error"]}', 'danger')
+    
+    return redirect(request.referrer or url_for('mfa.verify'))
+
+
+@mfa_bp.route('/bank-auth', methods=['GET', 'POST'])
+@login_required
+def bank_auth():
+    """Additional MFA verification before linking bank accounts"""
+    if not current_user.mfa_enabled:
+        flash('Please enable MFA before linking bank accounts.', 'warning')
+        return redirect(url_for('mfa.setup'))
+    
+    session['mfa_next'] = url_for('plaid.link')
+    return redirect(url_for('mfa.verify', purpose='bank_link'))
+```
+
+### 8. Plaid Integration Service (`app/plaid_integration/service.py`)
+
+```python
+import plaid
+from plaid.api import plaid_api
+from plaid.model.link_token_create_request import LinkTokenCreateRequest
+from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
+from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchangeRequest
+from plaid.model.transactions_sync_request import TransactionsSyncRequest
+from plaid.model.accounts_balance_get_request import AccountsBalanceGetRequest
+from plaid.model.products import Products
+from plaid.model.country_code import CountryCode
+from flask import current_app
+from datetime import datetime
+import logging
+
+from app import db
+from app.models.account import BankAccount
+from app.models.transaction import Transaction
+
+logger = logging.getLogger(__name__)
+
+
+class PlaidService:
+    """Service for Plaid API interactions"""
+    
+    def __init__(self):
+        self._client = None
+    
+    @property
+    def client(self):
+        """Lazy initialization of Plaid client"""
+        if self._client is None:
+            env = current_app.config['PLAID_ENV']
+            
+            if env == 'production':
+                host = plaid.Environment.Production
+            elif env == 'development':
+                host = plaid.Environment.Development
+            else:
+                host = plaid.Environment.Sandbox
+            
+            configuration = plaid.Configuration(
+                host=host,
+                api_key={
+                    'clientId': current_app.config['PLAID_CLIENT_ID'],
+                    'secret': current_app.config['PLAID_SECRET']
+                }
+            )
+            
+            api_client = plaid.ApiClient(configuration)
+            self._client = plaid_api.PlaidApi(api_client)
+        
+        return self._client
+    
+    def create_link_token(self, user):
+        """
+        Create a Link token for Plaid Link initialization
+        
+        Args:
+            user: User model instance
+            
+        Returns:
+            dict: {'success': bool, 'link_token': str, 'error': str}
+        """
+        try:
+            products = [Products(p) for p in current_app.config['PLAID_PRODUCTS']]
+            country_codes = [CountryCode(c) for c in current_app.config['PLAID_COUNTRY_CODES']]
+            
+            request = LinkTokenCreateRequest(
+                user=LinkTokenCreateRequestUser(
+                    client_user_id=str(user.id)
+                ),
+                client_name=current_app.config.get('VONAGE_BRAND_NAME', 'FinTrack'),
+                products=products,
+                country_codes=country_codes,
+                language='en'
+            )
+            
+            response = self.client.link_token_create(request)
+            
+            return {
+                'success': True,
+                'link_token': response.link_token,
+                'error': None
+            }
+            
+        except plaid.ApiException as e:
+            logger.error(f"Plaid link token error: {e}")
+            return {
+                'success': False,
+                'link_token': None,
+                'error': str(e)
+            }
+    
+    def exchange_public_token(self, public_token):
+        """
+        Exchange public token for access token
+        
+        Args:
+            public_token: Public token from Plaid Link
+            
+        Returns:
+            dict: {'success': bool, 'access_token': str, 'item_id': str, 'error': str}
+        """
+        try:
+            request = ItemPublicTokenExchangeRequest(
+                public_token=public_token
+            )
+            
+            response = self.client.item_public_token_exchange(request)
+            
+            return {
+                'success': True,
+                'access_token': response.access_token,
+                'item_id': response.item_id,
+                'error': None
+            }
+            
+        except plaid.ApiException as e:
+            logger.error(f"Plaid token exchange error: {e}")
+            return {
+                'success': False,
+                'access_token': None,
+                'item_id': None,
+                'error': str(e)
+            }
+    
+    def get_accounts(self, access_token):
+        """
+        Get accounts with balances
+        
+        Args:
+            access_token: Plaid access token
+            
+        Returns:
+            dict: {'success': bool, 'accounts': list, 'error': str}
+        """
+        try:
+            request = AccountsBalanceGetRequest(
+                access_token=access_token
+            )
+            
+            response = self.client.accounts_balance_get(request)
+            
+            accounts = []
+            for account in response.accounts:
+                accounts.append({
+                    'account_id': account.account_id,
+                    'name': account.name,
+                    'official_name': account.official_name,
+                    'type': account.type.value,
+                    'subtype': account.subtype.value if account.subtype else None,
+                    'mask': account.mask,
+                    'balances': {
+                        'current': account.balances.current,
+                        'available': account.balances.available,
+                        'limit': account.balances.limit
+                    }
+                })
+            
+            institution = None
+            if response.item.institution_id:
+                institution = {
+                    'id': response.item.institution_id,
+                    'name': self._get_institution_name(response.item.institution_id)
+                }
+            
+            return {
+                'success': True,
+                'accounts': accounts,
+                'institution': institution,
+                'error': None
+            }
+            
+        except plaid.ApiException as e:
+            logger.error(f"Plaid accounts error: {e}")
+            return {
+                'success': False,
+                'accounts': [],
+                'error': str(e)
+            }
+    
+    def sync_transactions(self, access_token, cursor=None):
+        """
+        Sync transactions using Plaid Sync API
+        
+        Args:
+            access_token: Plaid access token
+            cursor: Pagination cursor for incremental sync
+            
+        Returns:
+            dict: Transaction data with added, modified, removed transactions
+        """
+        try:
+            request_params = {'access_token': access_token}
+            if cursor:
+                request_params['cursor'] = cursor
+            
+            request = TransactionsSyncRequest(**request_params)
+            response = self.client.transactions_sync(request)
+            
+            return {
+                'success': True,
+                'added': response.added,
+                'modified': response.modified,
+                'removed': response.removed,
+                'next_cursor': response.next_cursor,
+                'has_more': response.has_more,
+                'error': None
+            }
+            
+        except plaid.ApiException as e:
+            logger.error(f"Plaid transaction sync error: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def save_accounts_for_user(self, user_id, access_token, item_id, accounts_data, institution):
+        """
+        Save linked accounts to database
+        
+        Args:
+            user_id: User ID
+            access_token: Plaid access token
+            item_id: Plaid item ID
+            accounts_data: Account data from Plaid
+            institution: Institution data
+        """
+        for account_data in accounts_data:
+            account = BankAccount(
+                user_id=user_id,
+                plaid_item_id=item_id,
+                plaid_account_id=account_data['account_id'],
+                plaid_access_token=access_token,  # Should be encrypted!
+                institution_id=institution['id'] if institution else None,
+                institution_name=institution['name'] if institution else None,
+                account_name=account_data['name'],
+                account_type=account_data['type'],
+                account_subtype=account_data['subtype'],
+                mask=account_data['mask'],
+                current_balance=account_data['balances']['current'],
+                available_balance=account_data['balances']['available'],
+                credit_limit=account_data['balances']['limit'],
+                last_synced_at=datetime.utcnow()
+            )
+            db.session.add(account)
+        
+        db.session.commit()
+        logger.info(f"Saved {len(accounts_data)} accounts for user {user_id}")
+    
+    def sync_and_save_transactions(self, bank_account):
+        """
+        Sync and save transactions for a bank account
+        
+        Args:
+            bank_account: BankAccount model instance
+        """
+        cursor = None  # In production, store and retrieve cursor
+        has_more = True
+        
+        while has_more:
+            result = self.sync_transactions(
+                bank_account.plaid_access_token,
+                cursor
+            )
+            
+            if not result['success']:
+                logger.error(f"Transaction sync failed: {result['error']}")
+                break
+            
+            # Process added transactions
+            for tx in result.get('added', []):
+                self._save_transaction(bank_account.id, tx)
+            
+            # Process modified transactions
+            for tx in result.get('modified', []):
+                self._update_transaction(tx)
+            
+            # Process removed transactions
+            for tx in result.get('removed', []):
+                self._remove_transaction(tx.transaction_id)
+            
+            cursor = result['next_cursor']
+            has_more = result['has_more']
+        
+        bank_account.last_synced_at = datetime.utcnow()
+        db.session.commit()
+    
+    def _save_transaction(self, account_id, tx_data):
+        """Save a single transaction"""
+        # Check if transaction already exists
+        existing = Transaction.query.filter_by(
+            plaid_transaction_id=tx_data.transaction_id
+        ).first()
+        
+        if existing:
+            return
+        
+        transaction = Transaction(
+            account_id=account_id,
+            plaid_transaction_id=tx_data.transaction_id,
+            name=tx_data.name,
+            merchant_name=tx_data.merchant_name,
+            amount=tx_data.amount,
+            currency_code=tx_data.iso_currency_code or 'USD',
+            category=tx_data.category[0] if tx_data.category else None,
+            date=tx_data.date,
+            authorized_date=tx_data.authorized_date,
+            pending=tx_data.pending,
+            payment_channel=tx_data.payment_channel
+        )
+        
+        # Add location if available
+        if tx_data.location:
+            transaction.location_address = tx_data.location.address
+            transaction.location_city = tx_data.location.city
+            transaction.location_region = tx_data.location.region
+            transaction.location_postal_code = tx_data.location.postal_code
+            transaction.location_country = tx_data.location.country
+        
+        db.session.add(transaction)
+    
+    def _update_transaction(self, tx_data):
+        """Update an existing transaction"""
+        transaction = Transaction.query.filter_by(
+            plaid_transaction_id=tx_data.transaction_id
+        ).first()
+        
+        if transaction:
+            transaction.name = tx_data.name
+            transaction.merchant_name = tx_data.merchant_name
+            transaction.amount = tx_data.amount
+            transaction.pending = tx_data.pending
+            db.session.add(transaction)
+    
+    def _remove_transaction(self, transaction_id):
+        """Remove a transaction"""
+        Transaction.query.filter_by(
+            plaid_transaction_id=transaction_id
+        ).delete()
+    
+    def _get_institution_name(self, institution_id):
+        """Get institution name from ID"""
+        try:
+            from plaid.model.institutions_get_by_id_request import InstitutionsGetByIdRequest
+            
+            request = InstitutionsGetByIdRequest(
+                institution_id=institution_id,
+                country_codes=[CountryCode('US')]
+            )
+            response = self.client.institutions_get_by_id(request)
+            return response.institution.name
+        except:
+            return None
+
+
+# Singleton instance
+plaid_service = PlaidService()
+```
+
+### 9. Plaid Routes (`app/plaid_integration/routes.py`)
+
+```python
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, session
+from flask_login import login_required, current_user
+
+from app import db
+from app.models.account import BankAccount
+from app.plaid_integration.service import plaid_service
+from app.mfa.routes import mfa_required
+
+plaid_bp = Blueprint('plaid', __name__)
+
+
+@plaid_bp.route('/link')
+@login_required
+@mfa_required
+def link():
+    """Plaid Link page - requires MFA for bank connections"""
+    # Create link token
+    result = plaid_service.create_link_token(current_user)
+    
+    if not result['success']:
+        flash(f'Failed to initialize bank connection: {result["error"]}', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    return render_template(
+        'plaid/link.html',
+        link_token=result['link_token']
+    )
+
+
+@plaid_bp.route('/callback', methods=['POST'])
+@login_required
+def callback():
+    """Handle Plaid Link callback"""
+    data = request.get_json()
+    public_token = data.get('public_token')
+    
+    if not public_token:
+        return jsonify({'success': False, 'error': 'No public token provided'}), 400
+    
+    # Exchange public token for access token
+    exchange_result = plaid_service.exchange_public_token(public_token)
+    
+    if not exchange_result['success']:
+        return jsonify({
+            'success': False,
+            'error': exchange_result['error']
+        }), 400
+    
+    # Get accounts
+    accounts_result = plaid_service.get_accounts(exchange_result['access_token'])
+    
+    if not accounts_result['success']:
+        return jsonify({
+            'success': False,
+            'error': accounts_result['error']
+        }), 400
+    
+    # Save accounts to database
+    plaid_service.save_accounts_for_user(
+        user_id=current_user.id,
+        access_token=exchange_result['access_token'],
+        item_id=exchange_result['item_id'],
+        accounts_data=accounts_result['accounts'],
+        institution=accounts_result['institution']
+    )
+    
+    return jsonify({
+        'success': True,
+        'message': f"Successfully linked {len(accounts_result['accounts'])} accounts"
+    })
+
+
+@plaid_bp.route('/accounts')
+@login_required
+def accounts():
+    """View linked bank accounts"""
+    user_accounts = BankAccount.query.filter_by(
+        user_id=current_user.id,
+        is_active=True
+    ).all()
+    
+    return render_template('plaid/accounts.html', accounts=user_accounts)
+
+
+@plaid_bp.route('/sync/<int:account_id>', methods=['POST'])
+@login_required
+def sync_account(account_id):
+    """Sync transactions for an account"""
+    account = BankAccount.query.filter_by(
+        id=account_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    try:
+        plaid_service.sync_and_save_transactions(account)
+        flash('Transactions synced successfully!', 'success')
+    except Exception as e:
+        flash(f'Failed to sync transactions: {str(e)}', 'danger')
+    
+    return redirect(url_for('plaid.accounts'))
+
+
+@plaid_bp.route('/sync-all', methods=['POST'])
+@login_required
+def sync_all():
+    """Sync all user accounts"""
+    accounts = BankAccount.query.filter_by(
+        user_id=current_user.id,
+        is_active=True
+    ).all()
+    
+    synced = 0
+    for account in accounts:
+        try:
+            plaid_service.sync_and_save_transactions(account)
+            synced += 1
+        except Exception as e:
+            flash(f'Failed to sync {account.institution_name}: {str(e)}', 'warning')
+    
+    flash(f'Successfully synced {synced} accounts!', 'success')
+    return redirect(url_for('dashboard.index'))
+
+
+@plaid_bp.route('/remove/<int:account_id>', methods=['POST'])
+@login_required
+@mfa_required
+def remove_account(account_id):
+    """Remove a linked bank account"""
+    account = BankAccount.query.filter_by(
+        id=account_id,
+        user_id=current_user.id
+    ).first_or_404()
+    
+    account.is_active = False
+    db.session.commit()
+    
+    flash(f'Account {account.institution_name} has been removed.', 'success')
+    return redirect(url_for('plaid.accounts'))
+
+
+@plaid_bp.route('/webhook', methods=['POST'])
+def webhook():
+    """Handle Plaid webhooks"""
+    data = request.get_json()
+    
+    webhook_type = data.get('webhook_type')
+    webhook_code = data.get('webhook_code')
+    item_id = data.get('item_id')
+    
+    # Handle different webhook types
+    if webhook_type == 'TRANSACTIONS':
+        if webhook_code in ['SYNC_UPDATES_AVAILABLE', 'INITIAL_UPDATE']:
+            # Find account and sync
+            account = BankAccount.query.filter_by(plaid_item_id=item_id).first()
+            if account:
+                plaid_service.sync_and_save_transactions(account)
+    
+    elif webhook_type == 'ITEM':
+        if webhook_code == 'ERROR':
+            # Handle item errors
+            account = BankAccount.query.filter_by(plaid_item_id=item_id).first()
+            if account:
+                account.is_active = False
+                db.session.commit()
+    
+    return jsonify({'received': True})
+```
+
+### 10. Dashboard Routes (`app/dashboard/routes.py`)
+
+```python
+from flask import Blueprint, render_template, request
+from flask_login import login_required, current_user
+from sqlalchemy import func
+from datetime import datetime, timedelta
+
+from app.models.account import BankAccount
+from app.models.transaction import Transaction
+
+dashboard_bp = Blueprint('dashboard', __name__)
+
+
+@dashboard_bp.route('/')
+@login_required
+def index():
+    """Main dashboard view"""
+    # Get user's accounts
+    accounts = BankAccount.query.filter_by(
+        user_id=current_user.id,
+        is_active=True
+    ).all()
+    
+    # Calculate totals
+    total_balance = sum(a.current_balance or 0 for a in accounts)
+    total_available = sum(a.available_balance or 0 for a in accounts)
+    
+    # Get recent transactions
+    recent_transactions = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id
+    ).order_by(Transaction.date.desc()).limit(10).all()
+    
+    # Get spending summary for current month
+    today = datetime.today()
+    first_of_month = today.replace(day=1)
+    
+    monthly_spending = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id,
+        Transaction.date >= first_of_month,
+        Transaction.amount > 0  # Expenses are positive in Plaid
+    ).with_entities(
+        func.sum(Transaction.amount)
+    ).scalar() or 0
+    
+    # Get spending by category
+    spending_by_category = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id,
+        Transaction.date >= first_of_month,
+        Transaction.amount > 0
+    ).with_entities(
+        Transaction.category,
+        func.sum(Transaction.amount).label('total')
+    ).group_by(Transaction.category).order_by(func.sum(Transaction.amount).desc()).limit(5).all()
+    
+    return render_template(
+        'dashboard/index.html',
+        accounts=accounts,
+        total_balance=total_balance,
+        total_available=total_available,
+        recent_transactions=recent_transactions,
+        monthly_spending=monthly_spending,
+        spending_by_category=spending_by_category
+    )
+
+
+@dashboard_bp.route('/transactions')
+@login_required
+def transactions():
+    """View all transactions"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 25
+    
+    # Filters
+    account_id = request.args.get('account_id', type=int)
+    category = request.args.get('category')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    search = request.args.get('search')
+    
+    # Build query
+    query = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id
+    )
+    
+    if account_id:
+        query = query.filter(Transaction.account_id == account_id)
+    
+    if category:
+        query = query.filter(Transaction.category == category)
+    
+    if start_date:
+        query = query.filter(Transaction.date >= datetime.strptime(start_date, '%Y-%m-%d'))
+    
+    if end_date:
+        query = query.filter(Transaction.date <= datetime.strptime(end_date, '%Y-%m-%d'))
+    
+    if search:
+        query = query.filter(
+            Transaction.name.ilike(f'%{search}%') |
+            Transaction.merchant_name.ilike(f'%{search}%')
+        )
+    
+    # Paginate
+    transactions = query.order_by(Transaction.date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # Get filter options
+    accounts = BankAccount.query.filter_by(user_id=current_user.id, is_active=True).all()
+    categories = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id
+    ).with_entities(Transaction.category).distinct().all()
+    
+    return render_template(
+        'dashboard/transactions.html',
+        transactions=transactions,
+        accounts=accounts,
+        categories=[c[0] for c in categories if c[0]],
+        filters={
+            'account_id': account_id,
+            'category': category,
+            'start_date': start_date,
+            'end_date': end_date,
+            'search': search
+        }
+    )
+
+
+@dashboard_bp.route('/analytics')
+@login_required
+def analytics():
+    """Financial analytics and insights"""
+    # Date ranges
+    today = datetime.today()
+    last_30_days = today - timedelta(days=30)
+    last_90_days = today - timedelta(days=90)
+    
+    # Daily spending trend (last 30 days)
+    daily_spending = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id,
+        Transaction.date >= last_30_days,
+        Transaction.amount > 0
+    ).with_entities(
+        Transaction.date,
+        func.sum(Transaction.amount).label('total')
+    ).group_by(Transaction.date).order_by(Transaction.date).all()
+    
+    # Category breakdown
+    category_breakdown = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id,
+        Transaction.date >= last_30_days,
+        Transaction.amount > 0
+    ).with_entities(
+        Transaction.category,
+        func.sum(Transaction.amount).label('total'),
+        func.count(Transaction.id).label('count')
+    ).group_by(Transaction.category).order_by(func.sum(Transaction.amount).desc()).all()
+    
+    # Top merchants
+    top_merchants = Transaction.query.join(BankAccount).filter(
+        BankAccount.user_id == current_user.id,
+        Transaction.date >= last_30_days,
+        Transaction.merchant_name.isnot(None),
+        Transaction.amount > 0
+    ).with_entities(
+        Transaction.merchant_name,
+        func.sum(Transaction.amount).label('total'),
+        func.count(Transaction.id).label('count')
+    ).group_by(Transaction.merchant_name).order_by(func.sum(Transaction.amount).desc()).limit(10).all()
+    
+    # Monthly comparison
+    monthly_totals = []
+    for i in range(6):
+        month_start = (today.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+        month_end = (month_start + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        total = Transaction.query.join(BankAccount).filter(
+            BankAccount.user_id == current_user.id,
+            Transaction.date >= month_start,
+            Transaction.date <= month_end,
+            Transaction.amount > 0
+        ).with_entities(func.sum(Transaction.amount)).scalar() or 0
+        
+        monthly_totals.append({
+            'month': month_start.strftime('%B %Y'),
+            'total': total
+        })
+    
+    return render_template(
+        'dashboard/analytics.html',
+        daily_spending=daily_spending,
+        category_breakdown=category_breakdown,
+        top_merchants=top_merchants,
+        monthly_totals=list(reversed(monthly_totals))
+    )
+```
+
+### 11. Auth Routes (`app/auth/routes.py`)
+
+```python
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask_login import login_user, logout_user, login_required, current_user
+from datetime import datetime
+
+from app import db
+from app.models.user import User
+from app.auth.forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm
+from app.email.service import send_verification_email, send_password_reset_email
+
+auth_bp = Blueprint('auth', __name__)
+
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    form = RegistrationForm()
+    
+    if form.validate_on_submit():
+        # Check if user exists
+        existing = User.query.filter_by(email=form.email.data.lower()).first()
+        if existing:
+            flash('An account with this email already exists.', 'danger')
+            return render_template('auth/register.html', form=form)
+        
+        # Create user
+        user = User(
+            email=form.email.data.lower(),
+            first_name=form.first_name.data,
+            last_name=form.last_name.data
+        )
+        user.set_password(form.password.data)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        # Send verification email
+        send_verification_email(user)
+        
+        flash('Registration successful! Please check your email to verify your account.', 'success')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/register.html', form=form)
+
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """User login"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    form = LoginForm()
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        
+        if user is None or not user.check_password(form.password.data):
+            flash('Invalid email or password.', 'danger')
+            return render_template('auth/login.html', form=form)
+        
+        if not user.is_active:
+            flash('Your account has been deactivated.', 'danger')
+            return render_template('auth/login.html', form=form)
+        
+        if not user.email_verified:
+            flash('Please verify your email before logging in.', 'warning')
+            return render_template('auth/login.html', form=form)
+        
+        # Check if MFA is enabled
+        if user.mfa_enabled and user.phone_number:
+            # Store user ID in session and redirect to MFA
+            session['mfa_user_id'] = user.id
+            return redirect(url_for('mfa.verify', purpose='login'))
+        
+        # No MFA - log in directly
+        login_user(user, remember=form.remember_me.data)
+        user.last_login_at = datetime.utcnow()
+        db.session.commit()
+        
+        flash('Login successful!', 'success')
+        next_page = request.args.get('next')
+        return redirect(next_page or url_for('dashboard.index'))
+    
+    return render_template('auth/login.html', form=form)
+
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    """User logout"""
+    logout_user()
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('main.home'))
+
+
+@auth_bp.route('/verify-email/<token>')
+def verify_email(token):
+    """Verify email address"""
+    email = User.verify_email_token(token)
+    
+    if not email:
+        flash('Invalid or expired verification link.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    if user.email_verified:
+        flash('Email already verified.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    user.email_verified = True
+    user.email_verified_at = datetime.utcnow()
+    db.session.commit()
+    
+    flash('Email verified successfully! You can now log in.', 'success')
+    return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    """Resend verification email"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').lower()
+        user = User.query.filter_by(email=email).first()
+        
+        if user and not user.email_verified:
+            send_verification_email(user)
+        
+        # Always show success to prevent email enumeration
+        flash('If an account exists with that email, a verification link has been sent.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/resend_verification.html')
+
+
+@auth_bp.route('/reset-password-request', methods=['GET', 'POST'])
+def reset_password_request():
+    """Request password reset"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    form = ResetPasswordRequestForm()
+    
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        
+        if user:
+            send_password_reset_email(user)
+        
+        # Always show success to prevent email enumeration
+        flash('If an account exists with that email, a password reset link has been sent.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password_request.html', form=form)
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Reset password with token"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+    
+    email = User.verify_reset_token(token)
+    
+    if not email:
+        flash('Invalid or expired reset link.', 'danger')
+        return redirect(url_for('auth.reset_password_request'))
+    
+    user = User.query.filter_by(email=email).first()
+    
+    if not user:
+        flash('User not found.', 'danger')
+        return redirect(url_for('auth.reset_password_request'))
+    
+    form = ResetPasswordForm()
+    
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        
+        flash('Your password has been reset. You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password.html', form=form)
+```
+
+### 12. Templates
+
+#### Base Template (`app/templates/base.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FinTrack{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <i class="fas fa-chart-line me-2"></i>FinTrack
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard.index') }}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('plaid.accounts') }}">
+                            <i class="fas fa-university me-1"></i>Accounts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard.transactions') }}">
+                            <i class="fas fa-exchange-alt me-1"></i>Transactions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard.analytics') }}">
+                            <i class="fas fa-chart-pie me-1"></i>Analytics
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i>{{ current_user.full_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('settings.index') }}">
+                                    <i class="fas fa-cog me-2"></i>Settings
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('mfa.setup') }}">
+                                    <i class="fas fa-shield-alt me-2"></i>MFA Settings
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-light ms-2" href="{{ url_for('auth.register') }}">Sign Up</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+    
+    <!-- Main Content -->
+    <main class="container py-4">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-auto">
+        <div class="container text-center">
+            <p class="text-muted mb-0">&copy; 2025 FinTrack. Secure financial tracking powered by Plaid.</p>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+```
+
+#### Dashboard Template (`app/templates/dashboard/index.html`)
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FinTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>Welcome back, {{ current_user.first_name or 'there' }}!</h2>
+        <p class="text-muted">Here's your financial overview</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-subtitle mb-2 opacity-75">Total Balance</h6>
+                        <h3 class="card-title mb-0">${{ "%.2f"|format(total_balance) }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-wallet fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-subtitle mb-2 opacity-75">Available</h6>
+                        <h3 class="card-title mb-0">${{ "%.2f"|format(total_available) }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-money-bill-wave fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-3">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-subtitle mb-2 opacity-75">This Month</h6>
+                        <h3 class="card-title mb-0">${{ "%.2f"|format(monthly_spending) }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Accounts and Transactions -->
+<div class="row">
+    <!-- Linked Accounts -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Linked Accounts</h5>
+                <a href="{{ url_for('plaid.link') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> Add
+                </a>
+            </div>
+            <div class="card-body">
+                {% if accounts %}
+                <ul class="list-group list-group-flush">
+                    {% for account in accounts %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div>
+                            <strong>{{ account.institution_name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ account.account_name }} ****{{ account.mask }}</small>
+                        </div>
+                        <span class="badge bg-{{ 'success' if account.current_balance >= 0 else 'danger' }} rounded-pill">
+                            ${{ "%.2f"|format(account.current_balance) }}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-university fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No accounts linked yet</p>
+                    <a href="{{ url_for('plaid.link') }}" class="btn btn-primary">
+                        Link Your First Account
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Transactions</h5>
+                <a href="{{ url_for('dashboard.transactions') }}" class="btn btn-sm btn-outline-primary">
+                    View All
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_transactions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in recent_transactions %}
+                            <tr>
+                                <td>{{ tx.date.strftime('%b %d') }}</td>
+                                <td>
+                                    {{ tx.merchant_name or tx.name }}
+                                    {% if tx.pending %}
+                                    <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ tx.category or 'Uncategorized' }}</span></td>
+                                <td class="text-end {{ 'text-danger' if tx.amount > 0 else 'text-success' }}">
+                                    {{ '-' if tx.amount > 0 else '+' }}${{ "%.2f"|format(tx.amount|abs) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No transactions yet</p>
+                    <p class="small text-muted">Link a bank account to start tracking your transactions</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Spending by Category -->
+{% if spending_by_category %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Spending by Category (This Month)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for category, total in spending_by_category %}
+                    <div class="col-md-4 col-lg-2 mb-3">
+                        <div class="text-center">
+                            <h4>${{ "%.0f"|format(total) }}</h4>
+                            <p class="text-muted mb-0">{{ category or 'Other' }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+```
+
+#### Plaid Link Template (`app/templates/plaid/link.html`)
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Link Bank Account - FinTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-university me-2"></i>Link Bank Account</h5>
+            </div>
+            <div class="card-body text-center py-5">
+                <i class="fas fa-lock fa-4x text-success mb-4"></i>
+                <h4>Secure Bank Connection</h4>
+                <p class="text-muted mb-4">
+                    Connect your bank account securely through Plaid. 
+                    Your credentials are never shared with us.
+                </p>
+                
+                <button id="link-button" class="btn btn-primary btn-lg">
+                    <i class="fas fa-link me-2"></i>Connect Your Bank
+                </button>
+                
+                <div id="link-status" class="mt-4 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Connecting your account...</p>
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Your data is encrypted and secure. We use bank-level security.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.plaid.com/link/v2/stable/link-initialize.js"></script>
+<script>
+    const linkToken = '{{ link_token }}';
+    
+    const handler = Plaid.create({
+        token: linkToken,
+        onSuccess: async (publicToken, metadata) => {
+            document.getElementById('link-button').classList.add('d-none');
+            document.getElementById('link-status').classList.remove('d-none');
+            
+            try {
+                const response = await fetch('{{ url_for("plaid.callback") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        public_token: publicToken,
+                        metadata: metadata
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = '{{ url_for("plaid.accounts") }}?success=1';
+                } else {
+                    alert('Failed to link account: ' + result.error);
+                    location.reload();
+                }
+            } catch (error) {
+                alert('An error occurred. Please try again.');
+                location.reload();
+            }
+        },
+        onExit: (err, metadata) => {
+            if (err) {
+                console.error('Plaid Link error:', err);
+            }
+        },
+        onEvent: (eventName, metadata) => {
+            console.log('Plaid event:', eventName);
+        }
+    });
+    
+    document.getElementById('link-button').addEventListener('click', () => {
+        handler.open();
+    });
+</script>
+{% endblock %}
+```
+
+#### MFA Verify Template (`app/templates/mfa/verify.html`)
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Verify Your Identity - FinTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                <h4 class="mb-0">Two-Factor Authentication</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-center text-muted mb-4">
+                    {% if purpose == 'login' %}
+                    Enter the verification code sent to your phone to complete sign in.
+                    {% elif purpose == 'bank_link' %}
+                    For your security, please verify your identity before linking a bank account.
+                    {% else %}
+                    Enter the verification code to continue.
+                    {% endif %}
+                </p>
+                
+                <form method="POST" id="mfa-form">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-4">
+                        <label class="form-label">Verification Code</label>
+                        <div class="d-flex justify-content-center gap-2">
+                            {% for i in range(6) %}
+                            <input type="text" 
+                                   class="form-control text-center code-input" 
+                                   maxlength="1" 
+                                   pattern="[0-9]"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   data-index="{{ i }}">
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="code" id="code-input" value="">
+                        {% if form.code.errors %}
+                        <div class="text-danger small mt-2">
+                            {{ form.code.errors[0] }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-check me-2"></i>Verify
+                    </button>
+                </form>
+                
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Didn't receive the code?</p>
+                    <form action="{{ url_for('mfa.resend') }}" method="POST" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-link btn-sm">
+                            Resend Code
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.code-input');
+    const hiddenInput = document.getElementById('code-input');
+    
+    inputs.forEach((input, index) => {
+        input.addEventListener('input', function(e) {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+            
+            // Move to next input
+            if (this.value && index < inputs.length - 1) {
+                inputs[index + 1].focus();
+            }
+            
+            // Update hidden input
+            updateHiddenInput();
+        });
+        
+        input.addEventListener('keydown', function(e) {
+            // Handle backspace
+            if (e.key === 'Backspace' && !this.value && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+        
+        input.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            const numbers = paste.replace(/[^0-9]/g, '').slice(0, 6);
+            
+            numbers.split('').forEach((num, i) => {
+                if (inputs[i]) {
+                    inputs[i].value = num;
+                }
+            });
+            
+            updateHiddenInput();
+            
+            if (numbers.length === 6) {
+                inputs[5].focus();
+            }
+        });
+    });
+    
+    function updateHiddenInput() {
+        let code = '';
+        inputs.forEach(input => {
+            code += input.value;
+        });
+        hiddenInput.value = code;
+    }
+    
+    // Focus first input
+    inputs[0].focus();
+});
+</script>
+{% endblock %}
+```
+
+### 13. Requirements (`requirements.txt`)
+
+```
+# Flask
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Flask-Mail==0.9.1
+
+# Database
+SQLAlchemy==2.0.23
+
+# Vonage
+vonage==3.14.0
+
+# Plaid
+plaid-python==20.0.0
+
+# Security
+Werkzeug==3.0.1
+itsdangerous==2.1.2
+python-dotenv==1.0.0
+
+# Forms
+WTForms==3.1.1
+email-validator==2.1.0
+
+# Utilities
+python-dateutil==2.8.2
+requests==2.31.0
+```
+
+### 14. Environment Variables (`.env.example`)
+
+```env
+# Flask
+SECRET_KEY=your-super-secret-key-change-in-production
+FLASK_ENV=development
+FLASK_DEBUG=1
+
+# Database
+DATABASE_URL=sqlite:///fintrack.db
+
+# Email (Gmail example)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=true
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=your-email@gmail.com
+
+# Vonage
+VONAGE_API_KEY=your-vonage-api-key
+VONAGE_API_SECRET=your-vonage-api-secret
+VONAGE_APPLICATION_ID=your-vonage-application-id
+VONAGE_PRIVATE_KEY_PATH=./private.key
+VONAGE_BRAND_NAME=FinTrack
+
+# Plaid
+PLAID_CLIENT_ID=your-plaid-client-id
+PLAID_SECRET=your-plaid-secret
+PLAID_ENV=sandbox
+PLAID_PRODUCTS=transactions,auth,identity
+PLAID_COUNTRY_CODES=US
+```
+
+### 15. Run Script (`run.py`)
+
+```python
+import os
+from app import create_app, db
+
+config_name = os.getenv('FLASK_ENV', 'development')
+app = create_app(config_name)
+
+@app.shell_context_processor
+def make_shell_context():
+    """Make database models available in flask shell"""
+    from app.models.user import User
+    from app.models.account import BankAccount
+    from app.models.transaction import Transaction
+    from app.models.mfa import MFASession
+    
+    return {
+        'db': db,
+        'User': User,
+        'BankAccount': BankAccount,
+        'Transaction': Transaction,
+        'MFASession': MFASession
+    }
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+```
+
+---
+
+## Setup Instructions
+
+```bash
+# 1. Clone and setup
+git clone <your-repo>
+cd fintrack
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Setup environment variables
+cp .env.example .env
+# Edit .env with your credentials
+
+# 5. Initialize database
+flask db init
+flask db migrate -m "Initial migration"
+flask db upgrade
+
+# 6. Run the application
+flask run
+
+# Or for production:
+gunicorn -w 4 -b 0.0.0.0:5000 run:app
+```
+
+---
+
+## API Documentation
+
+| Endpoint | Method | Auth | MFA | Description |
+|----------|--------|------|-----|-------------|
+| `/auth/register` | POST | No | No | User registration |
+| `/auth/login` | POST | No | Yes* | User login (*if enabled) |
+| `/auth/verify-email/<token>` | GET | No | No | Email verification |
+| `/mfa/setup` | GET/POST | Yes | No | Setup MFA |
+| `/mfa/verify` | GET/POST | Partial | - | MFA verification |
+| `/plaid/link` | GET | Yes | Yes | Bank connection page |
+| `/plaid/callback` | POST | Yes | - | Plaid Link callback |
+| `/plaid/accounts` | GET | Yes | No | View linked accounts |
+| `/dashboard/` | GET | Yes | No | Main dashboard |
+| `/dashboard/transactions` | GET | Yes | No | Transaction list |
+| `/dashboard/analytics` | GET | Yes | No | Financial analytics |
+
+This integrated application provides a complete financial tracking solution with:
+
+- **Secure authentication** with email verification
+- **Two-factor authentication** via Vonage SMS/Voice
+- **Bank account linking** via Plaid with MFA protection
+- **Transaction syncing** and categorization
+- **Financial dashboard** with spending analytics

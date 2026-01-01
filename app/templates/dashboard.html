@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - BBA Services{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>👋 Welcome, {{ current_user.email }}!</h1>
+</div>
+
+<div class="dashboard-grid">
+    <!-- Account Status -->
+    <div class="dashboard-card">
+        <h2>Account Status</h2>
+        <div class="status-info">
+            <p>
+                <span class="status-badge success">✅ Email Verified</span>
+            </p>
+            <p>
+                {% if current_user.mfa_enabled %}
+                <span class="status-badge success">🔒 SMS MFA Enabled</span>
+                {% else %}
+                <span class="status-badge warning">⚠️ SMS MFA Disabled</span>
+                {% endif %}
+            </p>
+            <p style="color: #666; font-size: 14px;">
+                Member since: {{ current_user.created_at.strftime('%B %d, %Y') }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Financial Health Score -->
+    <div class="dashboard-card">
+        <h2>Financial Health Score</h2>
+        {% if assessment %}
+            <div class="score-display">
+                <div class="score-number" style="color: {% if assessment.score >= 70 %}#10B981{% elif assessment.score >= 40 %}#F59E0B{% else %}#EF4444{% endif %};">
+                    {{ assessment.score|round(1) }}
+                </div>
+                <p class="score-label">out of 100</p>
+                <p class="score-tier">{{ assessment.tier }}</p>
+                <p style="margin-top: 15px; font-size: 14px;">
+                    <a href="{{ url_for('questionnaire.take_assessment') }}" class="btn btn-secondary">Retake Assessment</a>
+                </p>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>You haven't completed the financial health assessment yet.</p>
+                <a href="{{ url_for('questionnaire.take_assessment') }}" class="btn btn-primary">Take Assessment</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Total Balance -->
+    <div class="dashboard-card">
+        <h2>Total Balance</h2>
+        {% if bank_accounts %}
+            <div class="score-display">
+                <div class="score-number" style="color: #10B981;">
+                    ${{ "{:,.2f}".format(total_balance) }}
+                </div>
+                <p class="score-label">Across {{ bank_accounts|length }} account(s)</p>
+                <p style="margin-top: 15px;">
+                    <a href="{{ url_for('plaid.accounts') }}" class="btn btn-secondary">View Accounts</a>
+                </p>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>Connect your bank account to see your balance and transactions.</p>
+                <a href="{{ url_for('plaid.link') }}" class="btn btn-primary">Link Bank Account</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Bank Accounts -->
+{% if bank_accounts %}
+<div class="section">
+    <div class="section-header">
+        <h2>Your Accounts</h2>
+        <a href="{{ url_for('plaid.link') }}" class="btn btn-primary">+ Add Account</a>
+    </div>
+    <div class="accounts-grid">
+        {% for account in bank_accounts %}
+        <div class="account-card">
+            <div class="account-header">
+                <h3>{{ account.institution_name }}</h3>
+                <span class="account-type">{{ account.account_type|upper }}</span>
+            </div>
+            <div class="account-info">
+                <p class="account-name">{{ account.account_name }}</p>
+                <p class="account-mask">•••• {{ account.mask }}</p>
+            </div>
+            <div class="account-balance">
+                <p class="balance-label">Available Balance</p>
+                <p class="balance-amount">${{ "{:,.2f}".format(account.available_balance or 0) }}</p>
+            </div>
+            <div class="account-actions">
+                <form method="POST" action="{{ url_for('plaid.sync_account', account_id=account.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-sm btn-secondary">Sync</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Recent Transactions -->
+{% if recent_transactions %}
+<div class="section">
+    <h2>Recent Transactions</h2>
+    <div class="transactions-list">
+        {% for tx in recent_transactions %}
+        <div class="transaction-item">
+            <div class="transaction-icon">
+                {% if tx.amount > 0 %}💸{% else %}💰{% endif %}
+            </div>
+            <div class="transaction-details">
+                <p class="transaction-name">{{ tx.merchant_name or tx.name }}</p>
+                <p class="transaction-category">{{ tx.primary_category or 'Uncategorized' }}</p>
+                <p class="transaction-date">{{ tx.date.strftime('%b %d, %Y') }}</p>
+            </div>
+            <div class="transaction-amount" style="color: {% if tx.amount > 0 %}#EF4444{% else %}#10B981{% endif %};">
+                {% if tx.amount > 0 %}-{% else %}+{% endif %}${{ "{:,.2f}".format(abs(tx.amount)) }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Spending by Category -->
+{% if spending_by_category %}
+<div class="section">
+    <h2>Spending by Category (Last 30 Days)</h2>
+    <div class="category-list">
+        {% for category, total in spending_by_category %}
+        <div class="category-item">
+            <span class="category-name">{{ category or 'Other' }}</span>
+            <span class="category-amount">${{ "{:,.2f}".format(total) }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- MFA Settings -->
+<div class="section">
+    <h2>Security Settings</h2>
+    <div class="dashboard-card">
+        {% if current_user.mfa_enabled %}
+            <p>SMS MFA is enabled for your account.</p>
+            <p style="color: #666; font-size: 14px; margin: 10px 0;">
+                Phone: {{ current_user.phone[-4:].rjust(len(current_user.phone), '*') }}
+            </p>
+            <form method="POST" action="{{ url_for('main.disable_mfa') }}" style="margin-top: 15px;">
+                <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to disable MFA?');">Disable MFA</button>
+            </form>
+        {% else %}
+            <p>Enable SMS two-factor authentication for enhanced security.</p>
+            <a href="{{ url_for('main.enable_mfa') }}" class="btn btn-primary" style="margin-top: 15px;">Enable SMS MFA</a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.dashboard-header {
+    margin-bottom: 30px;
+}
+
+.section {
+    margin-bottom: 40px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.dashboard-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.dashboard-card h2 {
+    color: #667eea;
+    margin-bottom: 20px;
+    font-size: 20px;
+}
+
+.status-info p {
+    margin: 10px 0;
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.status-badge.success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.score-display {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.score-number {
+    font-size: 64px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.score-label {
+    color: #666;
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.score-tier {
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 15px 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px 0;
+}
+
+.empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.accounts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.account-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-left: 4px solid #667eea;
+}
+
+.account-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.account-header h3 {
+    font-size: 18px;
+    color: #333;
+    margin: 0;
+}
+
+.account-type {
+    background: #f3f4f6;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.account-info {
+    margin-bottom: 15px;
+}
+
+.account-name {
+    font-size: 14px;
+    color: #666;
+    margin: 5px 0;
+}
+
+.account-mask {
+    font-size: 16px;
+    color: #333;
+    font-weight: 500;
+    margin: 5px 0;
+}
+
+.account-balance {
+    border-top: 1px solid #f3f4f6;
+    padding-top: 15px;
+    margin-bottom: 15px;
+}
+
+.balance-label {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+}
+
+.balance-amount {
+    font-size: 24px;
+    font-weight: bold;
+    color: #10B981;
+    margin: 5px 0;
+}
+
+.account-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.transactions-list {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.transaction-icon {
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 5px 0;
+}
+
+.transaction-category {
+    font-size: 12px;
+    color: #666;
+    margin: 0 0 3px 0;
+}
+
+.transaction-date {
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+}
+
+.transaction-amount {
+    font-size: 18px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.category-list {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.category-item:last-child {
+    border-bottom: none;
+}
+
+.category-name {
+    font-size: 16px;
+    color: #333;
+}
+
+.category-amount {
+    font-size: 16px;
+    font-weight: 600;
+    color: #EF4444;
+}
+
+</style>
+{% endblock %}
