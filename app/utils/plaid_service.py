@@ -151,10 +151,16 @@ class PlaidService:
             dict with 'success', transaction data, or 'error'
         """
         try:
-            request = TransactionsSyncRequest(
-                access_token=access_token,
-                cursor=cursor
-            )
+            # Build request - only include cursor if it's not None
+            if cursor:
+                request = TransactionsSyncRequest(
+                    access_token=access_token,
+                    cursor=cursor
+                )
+            else:
+                request = TransactionsSyncRequest(
+                    access_token=access_token
+                )
             
             response = self.client.transactions_sync(request)
             return {
