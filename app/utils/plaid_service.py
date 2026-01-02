@@ -304,10 +304,10 @@ class PlaidService:
         if existing:
             return existing
         
-        # Parse categories
-        categories = tx_data.get('category', [])
-        primary_cat = categories[0] if len(categories) > 0 else None
-        detailed_cat = categories[1] if len(categories) > 1 else None
+        # Parse categories - handle None or empty list
+        categories = tx_data.get('category') or []
+        primary_cat = categories[0] if categories and len(categories) > 0 else None
+        detailed_cat = categories[1] if categories and len(categories) > 1 else None
         
         # Parse date
         tx_date = tx_data.get('date')
