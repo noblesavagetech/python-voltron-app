@@ -197,8 +197,8 @@ class PlaidService:
             if existing:
                 # Update existing account
                 existing.account_name = account['name']
-                existing.account_type = account['type']
-                existing.account_subtype = account.get('subtype')
+                existing.account_type = str(account['type']) if account.get('type') else None
+                existing.account_subtype = str(account['subtype']) if account.get('subtype') else None
                 existing.mask = account['mask']
                 existing.is_active = True
                 
@@ -220,8 +220,8 @@ class PlaidService:
                     plaid_access_token=access_token,
                     institution_name=institution_name,
                     account_name=account['name'],
-                    account_type=account['type'],
-                    account_subtype=account.get('subtype'),
+                    account_type=str(account['type']) if account.get('type') else None,
+                    account_subtype=str(account['subtype']) if account.get('subtype') else None,
                     mask=account['mask'],
                     current_balance=balances.get('current'),
                     available_balance=balances.get('available'),
