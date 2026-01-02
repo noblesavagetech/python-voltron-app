@@ -42,6 +42,14 @@ def create_app():
     def load_user(user_id):
         return User.query.get(int(user_id))
     
+    # Add Python built-ins to Jinja2
+    app.jinja_env.globals.update({
+        'abs': abs,
+        'min': min,
+        'max': max,
+        'len': len
+    })
+    
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
