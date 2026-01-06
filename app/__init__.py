@@ -10,6 +10,8 @@ from app.routes.auth import auth_bp
 from app.routes.main import main_bp
 from app.routes.questionnaire import questionnaire_bp
 from app.routes.plaid import plaid_bp
+from app.routes.financials import financials_bp
+from app.routes.financials_api import financials_api_bp
 from app.config import Config
 
 
@@ -53,6 +55,8 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(main_bp)
+    app.register_blueprint(financials_bp)
+    app.register_blueprint(financials_api_bp)
     app.register_blueprint(questionnaire_bp, url_prefix='/questionnaire')
     app.register_blueprint(plaid_bp, url_prefix='/plaid')
     

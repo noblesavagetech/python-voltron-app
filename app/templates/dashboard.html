@@ -7,6 +7,15 @@
     <h1>👋 Welcome, {{ current_user.email }}!</h1>
 </div>
 
+<!-- Financial Dashboards Link -->
+<div class="section">
+    <div class="dashboard-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h2 style="color: white; margin-bottom: 15px;">📊 Financial Dashboards</h2>
+        <p style="margin-bottom: 20px; opacity: 0.9;">Access comprehensive financial analytics, insights, and advanced reporting tools.</p>
+        <a href="{{ url_for('financials.overview') }}" class="btn" style="background: white; color: #667eea; font-weight: 600;">View Financial Dashboards →</a>
+    </div>
+</div>
+
 <div class="dashboard-grid">
     <!-- Account Status -->
     <div class="dashboard-card">
