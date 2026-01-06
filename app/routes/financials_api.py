@@ -30,22 +30,13 @@ def get_overview():
     ).order_by(Transaction.date.desc()).limit(10).all()
     
     # Calculate income and expenses
-    cash_flow = db.session.query(
-        func.sum(func.case(
-            (Transaction.amount < 0, func.abs(Transaction.amount)),
-            else_=0
-        )).label('income'),
-        func.sum(func.case(
-            (Transaction.amount > 0, Transaction.amount),
-            else_=0
-        )).label('expenses')
-    ).join(BankAccount).filter(
+    transactions_query = Transaction.query.join(BankAccount).filter(
         BankAccount.user_id == current_user.id,
         Transaction.date >= thirty_days_ago
-    ).first()
+    ).all()
     
-    income = float(cash_flow.income or 0)
-    expenses = float(cash_flow.expenses or 0)
+    income = sum(abs(tx.amount) for tx in transactions_query if tx.amount < 0)
+    expenses = sum(tx.amount for tx in transactions_query if tx.amount > 0)
     
     # Spending by category
     spending_by_category = db.session.query(
