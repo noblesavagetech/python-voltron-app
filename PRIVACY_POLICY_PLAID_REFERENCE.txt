@@ -1,0 +1,202 @@
+BBA SERVICES - PLAID INTEGRATION PRIVACY REFERENCE
+==================================================
+
+Company Information:
+BBA Services
+401 W Atlantic Ave
+Delray Beach, FL 33444
+Email: privacy@bbaservices.com
+
+Effective Date: January 25, 2026
+
+IMPORTANT NOTICE ABOUT PLAID INTEGRATION
+=========================================
+
+BBA Services uses Plaid Inc. ("Plaid") to gather your data from financial institutions. 
+
+By using the BBA Services platform, you grant BBA Services and Plaid the right, power, and 
+authority to act on your behalf to access and transmit your personal and financial information 
+from your relevant financial institution. You agree to your personal and financial information 
+being transferred, stored, and processed by Plaid in accordance with Plaid's privacy policy.
+
+When you provide login data and additional information needed to connect your accounts, you 
+also give Plaid permission and authority to act on your behalf to access and transmit data to 
+and from your financial institution.
+
+PLAID DATA COLLECTION AND PROCESSING
+====================================
+
+Our mission at Plaid is to unlock financial freedom for everyone. Privacy and security are 
+very important to us.
+
+This reference document is meant to help you understand how Plaid collects, uses, and shares 
+your data when you use Plaid products or services through BBA Services - for example, when 
+you use Plaid to connect and share your data to power the BBA Services application.
+
+Data Plaid Collects:
+
+1. Data you provide:
+   - Identifiers like name, email address, date of birth, Social Security number, and phone number
+   - Login data when required by the provider of your account (username, password, account and 
+     routing number, or security token)
+   - Additional information needed to connect your accounts (security questions and answers, 
+     one-time passwords)
+   - Information from documents or statements (bank statements or pay stubs)
+   - Information related to your use of services
+
+2. Data from financial institutions when you connect your financial account:
+   - Account data (financial institution name, account name, account type, account ownership, 
+     account number, routing number)
+   - Account balance data (current and available balance)
+   - Credit account data (due dates, balances owed, payment amounts and dates, transaction 
+     history, credit limit, repayment status, interest rate)
+   - Loan account data (due dates, repayment status, balances, payment amounts and dates, 
+     interest rate, loan type, payment plan, terms)
+   - Investment account data (transaction information, type of asset, identifying details, 
+     quantity, price, fees)
+   - Account owner identifiers (name, email address, phone number, date of birth, address)
+   - Transaction data (amount, date, payee, type, quantity, price, location, description)
+   - Payroll and tax document data (income and employer information)
+
+3. Data from the electronic device you use:
+   - Internet protocol (IP) address
+   - Timezone setting and location, device location
+   - Hardware model and operating system
+   - Features accessed within services
+   - Browser data and network data
+   - Other technical data about the device
+
+HOW PLAID USES YOUR DATA
+=========================
+
+Plaid uses your data for the following purposes:
+
+- Provide Services: To operate, provide, service, assess, process, and maintain products and 
+  services
+- Help Prevent Fraud and Verify Identity: To verify your identity and help protect against 
+  fraud, unauthorized transactions, and security threats
+- Develop Services: To improve, enhance, and develop new products, features, and technologies
+- Provide Support: To provide support and respond to inquiries
+- Communicate: To send technical notices, updates, security alerts, and messages
+- For Legal Purposes: To comply with legal obligations and establish/defend against claims
+
+HOW PLAID SHARES YOUR DATA
+===========================
+
+As permitted by law, Plaid may share your data:
+
+- With BBA Services (the app you are using) and as directed by BBA Services
+- With the financial institutions you connect to Plaid or to BBA Services
+- With data processors and service providers who perform services for Plaid or BBA Services
+- To comply with applicable law, regulation, or legal process
+- In connection with a change in ownership or control of Plaid's business
+- Between Plaid and its affiliates, subsidiaries and related companies
+- To protect against fraud, unauthorized transactions, claims, or other liabilities
+- For any other notified purpose with your consent
+
+Plaid does not share your data with non-affiliated third parties except as permitted by law.
+
+PLAID DATA RETENTION
+====================
+
+Plaid retains your data only as long as it is needed. Plaid reviews your data periodically 
+to ensure it is still needed. When BBA Services removes your connection, Plaid's systems are 
+designed to automatically delete your personal data, subject to certain exceptions where 
+retention is necessary for:
+
+- Continuing to provide services you requested
+- Legal compliance requirements
+- Fraud prevention and security purposes
+- Data that has been aggregated, de-identified, or anonymized
+
+PLAID SECURITY
+==============
+
+Plaid's security policies and practices are designed to protect the confidentiality and 
+integrity of your data. Plaid implements controls designed to limit access to data to 
+personnel who have a business reason to know it and prohibits personnel from unlawfully 
+accessing, using or disclosing this data.
+
+YOUR DATA PROTECTION RIGHTS WITH PLAID
+======================================
+
+Regardless of where you live, you have the following rights related to your personal data 
+processed by Plaid:
+
+- Access data collected about you
+- Request details about categories and specific pieces of personal information collected
+- Request rectification or update of inaccurate or incomplete data
+- Request erasure or restriction of processing of your data (under certain circumstances)
+- Object to processing of your data under certain conditions
+- Withdraw consent where processing is based on consent
+- Request data portability (receive data in a structured, machine-readable format)
+
+To exercise these rights with Plaid, you can:
+- Submit a request using Plaid's online form
+- Contact Plaid at: privacy@plaid.com
+- Use Plaid Portal at my.plaid.com (for U.S. users) to view and manage connections
+
+PLAID PORTAL
+============
+
+Plaid developed the Plaid Portal to provide you with a convenient, centralized way to view 
+and manage the connections you've made using Plaid.
+
+If you're located in the U.S., you can sign up for Plaid Portal by visiting my.plaid.com, 
+verifying your phone number and email address, and creating a password. The Plaid Portal 
+provides you with controls to:
+
+- View financial accounts you've connected to BBA Services using Plaid
+- See the types of data shared with BBA Services
+- Terminate the connection between BBA Services and your financial accounts
+- Delete associated data stored in Plaid's systems
+
+CONTACTING PLAID
+================
+
+If you have any questions or complaints about Plaid's privacy practices, you can contact 
+Plaid at:
+
+Plaid Inc.
+Attn: Legal
+PO Box 7775 #35278
+San Francisco, California 94120-7775
+U.S.A.
+
+Email: privacy@plaid.com
+
+For more information about Plaid's privacy practices, please visit:
+https://plaid.com/legal
+
+PLAID SERVICES ARE NOT DIRECTED TO CHILDREN
+===========================================
+
+Plaid's services are not directed to individuals under 18 and Plaid does not knowingly 
+collect data relating to children.
+
+CHANGES TO PLAID'S PRIVACY POLICY
+==================================
+
+Plaid may update or change its privacy policy from time to time. If Plaid makes any updates 
+or changes, Plaid will post the new policy on Plaid's website at https://plaid.com/legal 
+and update the effective date. BBA Services will notify you of any material changes to 
+Plaid's privacy policy.
+
+===========================
+BBA SERVICES PRIVACY POLICY
+===========================
+
+For information about how BBA Services collects, uses, and shares your personal information, 
+please see the BBA Services Privacy Policy available at:
+https://[your-domain]/privacy-policy
+
+or contact us at:
+
+BBA Services
+401 W Atlantic Ave
+Delray Beach, FL 33444
+Email: privacy@bbaservices.com
+
+This document is for reference purposes and provides information about Plaid Inc.'s data 
+practices as they relate to the BBA Services platform. The complete and authoritative 
+Plaid privacy policy is available at https://plaid.com/legal.

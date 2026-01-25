@@ -133,3 +133,9 @@ def disable_mfa():
     db.session.commit()
     flash('MFA disabled.', 'info')
     return redirect(url_for('main.dashboard'))
+
+
+@main_bp.route('/privacy-policy')
+def privacy_policy():
+    """Privacy Policy page."""
+    return render_template('privacy_policy.html')
