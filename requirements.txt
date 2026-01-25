@@ -14,3 +14,6 @@ gunicorn==21.2.0
 pyotp==2.9.0
 qrcode==7.4.2
 pillow==10.2.0
+# Field-level encryption for sensitive data (Plaid tokens, etc.)
+cryptography==41.0.0
+sqlalchemy-utils==0.41.1

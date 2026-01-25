@@ -3,6 +3,7 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from app.utils.encryption import EncryptedString
 
 db = SQLAlchemy()
 
@@ -96,10 +97,10 @@ class BankAccount(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
-    # Plaid identifiers
+    # Plaid identifiers (access_token is encrypted for security)
     plaid_item_id = db.Column(db.String(100), nullable=False)
     plaid_account_id = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    plaid_access_token = db.Column(db.String(200), nullable=False)
+    plaid_access_token = db.Column(EncryptedString(500), nullable=False)  # Encrypted!
     
     # Account details
     institution_id = db.Column(db.String(50))
