@@ -26,9 +26,9 @@
             </p>
             <p>
                 {% if current_user.mfa_enabled %}
-                <span class="status-badge success">🔒 SMS MFA Enabled</span>
+                <span class="status-badge success">🔒 MFA Enabled</span>
                 {% else %}
-                <span class="status-badge warning">⚠️ SMS MFA Disabled</span>
+                <span class="status-badge warning">⚠️ MFA Disabled</span>
                 {% endif %}
             </p>
             <p style="color: #666; font-size: 14px;">
@@ -158,16 +158,16 @@
     <h2>Security Settings</h2>
     <div class="dashboard-card">
         {% if current_user.mfa_enabled %}
-            <p>SMS MFA is enabled for your account.</p>
+            <p>✅ Two-factor authentication is enabled using your authenticator app.</p>
             <p style="color: #666; font-size: 14px; margin: 10px 0;">
-                Phone: {{ current_user.phone[-4:].rjust(len(current_user.phone), '*') }}
+                Compatible with: Google Authenticator, Microsoft Authenticator, Authy, 1Password
             </p>
             <form method="POST" action="{{ url_for('main.disable_mfa') }}" style="margin-top: 15px;">
-                <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to disable MFA?');">Disable MFA</button>
+                <button type="submit" class="btn btn-secondary" onclick="return confirm('Are you sure you want to disable MFA? You will need to set it up again to re-enable.');">Disable MFA</button>
             </form>
         {% else %}
-            <p>Enable SMS two-factor authentication for enhanced security.</p>
-            <a href="{{ url_for('main.enable_mfa') }}" class="btn btn-primary" style="margin-top: 15px;">Enable SMS MFA</a>
+            <p>Enable two-factor authentication with your favorite authenticator app for enhanced security.</p>
+            <a href="{{ url_for('main.enable_mfa') }}" class="btn btn-primary" style="margin-top: 15px;">Enable MFA</a>
         {% endif %}
     </div>
 </div>

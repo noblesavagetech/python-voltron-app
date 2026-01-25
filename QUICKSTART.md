@@ -23,10 +23,6 @@ SECRET_KEY=your-random-secret-key-here
 BREVO_API_KEY=your_brevo_api_key
 SENDER_EMAIL=your-verified-email@example.com
 SENDER_NAME=BBA Services
-
-# Optional (for MFA)
-VONAGE_API_KEY=your_vonage_key
-VONAGE_API_SECRET=your_vonage_secret
 ```
 
 ### 3. Run the Application
@@ -56,10 +52,10 @@ Visit `http://localhost:5000`
 - View your health score
 
 ### 4. Optional: Enable MFA
-- From dashboard, click "Enable SMS MFA"
-- Enter phone number (with country code: +1234567890)
-- Receive SMS code
-- Enter code to enable MFA
+- From dashboard, click "Enable MFA"
+- Scan the QR code with your authenticator app (Google Authenticator, Authy, etc.)
+- Enter the 6-digit code from your app
+- MFA is now enabled!
 
 ## Getting API Keys
 
@@ -72,12 +68,15 @@ Visit `http://localhost:5000`
 5. Create new API key
 6. Copy and paste into `.env`
 
-### Vonage (Optional for MFA)
+### MFA (Built-in - No Setup Required!)
 
-1. Go to https://dashboard.nexmo.com/sign-up
-2. Create free account ($2 credit included)
-3. Find API Key and API Secret on dashboard
-4. Copy and paste into `.env`
+TOTP-based MFA is built into the application. Users can enable it using any authenticator app:
+- Google Authenticator (iOS/Android)
+- Microsoft Authenticator (iOS/Android)
+- Authy (iOS/Android/Desktop)
+- 1Password (iOS/Android/Desktop)
+
+No external API keys needed!
 
 ## Quick Deploy to Railway
 
@@ -120,11 +119,16 @@ pip install -r requirements.txt
 - Restart the application
 - Tables will be created automatically
 
+**"MFA code not working"**
+- Ensure your device clock is synchronized (TOTP is time-based)
+- Try entering the code immediately after it refreshes
+- Make sure you're using the correct account in your authenticator app
+
 ## Next Steps
 
 1. ✅ Complete the signup flow
 2. ✅ Take the financial health assessment
-3. ✅ (Optional) Enable SMS MFA
+3. ✅ (Optional) Enable TOTP MFA
 4. ✅ Deploy to Railway
 5. ✅ Customize the questionnaire questions
 6. ✅ Add your branding to templates

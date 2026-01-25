@@ -11,11 +11,11 @@ This application combines the best features from both reference repositories wit
 - Resend functionality
 - Email notifications
 
-✅ **Optional SMS MFA via Vonage**
-- Vonage Verify API integration
-- Automatic voice fallback
-- Phone number verification
-- Enable/disable MFA functionality
+✅ **Optional TOTP MFA**
+- Works with Google Authenticator, Microsoft Authenticator, Authy, 1Password
+- QR code generation for easy setup
+- RFC 6238 compliant (NIST SP 800-63B recommended)
+- No external service needed (free!)
 
 ### 2. Financial Health Assessment (from python-webapp)
 ✅ **Complete Questionnaire System**
@@ -38,7 +38,7 @@ This application combines the best features from both reference repositories wit
 - Email verification
 - Questionnaire interface
 - Dashboard with health score
-- MFA enablement
+- MFA enablement with QR code
 
 ✅ **Responsive Design**
 - Custom CSS styling
@@ -51,8 +51,7 @@ This application combines the best features from both reference repositories wit
 - Email authentication
 - Password hashing
 - Verification status
-- MFA settings
-- Phone storage
+- MFA settings (mfa_enabled, mfa_secret)
 
 ✅ **QuestionnaireResponse Model**
 - JSON answers storage
@@ -75,11 +74,11 @@ This application combines the best features from both reference repositories wit
 - HTML email templates
 - Error handling
 
-### SMS System (Vonage)
-- SMS verification codes
-- Automatic voice fallback
-- Request ID tracking
-- Code verification
+### TOTP MFA System (PyOTP)
+- QR code generation for authenticator apps
+- Time-based one-time passwords
+- Secret key generation and storage
+- Code verification with clock tolerance
 
 ### Questionnaire System
 - 8 financial health questions
@@ -91,7 +90,7 @@ This application combines the best features from both reference repositories wit
 - Password hashing (Werkzeug)
 - Session management (Flask-Login)
 - Email verification required
-- Optional SMS MFA
+- Optional TOTP MFA (NIST compliant)
 - CSRF protection
 
 ## 📊 User Journey
@@ -115,7 +114,7 @@ This application combines the best features from both reference repositories wit
    ↓
 9. Lands on dashboard
    ↓
-10. (Optional) Enables SMS MFA via Vonage
+10. (Optional) Enables TOTP MFA via authenticator app
 ```
 
 ## 🔧 Configuration Required
@@ -129,11 +128,15 @@ SENDER_EMAIL=verified@email.com
 SENDER_NAME=BBA Services
 ```
 
-### Optional Environment Variables
+### MFA Configuration
 ```bash
-VONAGE_API_KEY=your-vonage-key
-VONAGE_API_SECRET=your-vonage-secret
-VONAGE_BRAND_NAME=BBA Services
+# No external service needed!
+# TOTP MFA works out of the box with:
+# - Google Authenticator
+# - Microsoft Authenticator  
+# - Authy
+# - 1Password
+# - Any RFC 6238 compliant app
 ```
 
 ## 📁 File Structure
@@ -158,8 +161,8 @@ python-voltron-app/
 │   │   └── questionnaire.py  # Assessment
 │   ├── utils/
 │   │   ├── email.py          # Brevo integration
-│   │   └── sms.py            # Vonage integration
-│   ├── templates/            # HTML templates (8 files)
+│   │   └── totp.py           # TOTP MFA utilities
+│   ├── templates/            # HTML templates
 │   └── static/
 │       └── css/
 │           └── styles.css    # Styling
@@ -196,16 +199,17 @@ python app.py
 1. **Complete Integration**: Seamlessly combines authentication, email verification, health assessment, and optional MFA
 2. **Production Ready**: Full deployment configurations for Railway and Docker
 3. **User-Centric Flow**: Questionnaire integrated into signup process
-4. **Secure by Design**: Email verification required, optional MFA, secure sessions
+4. **Secure by Design**: Email verification required, NIST-compliant TOTP MFA, secure sessions
 5. **Comprehensive Documentation**: README.md + QUICKSTART.md + inline comments
-6. **Modern Stack**: Flask 3.0, Brevo SMTP, Vonage Verify API
+6. **Modern Stack**: Flask 3.0, Brevo SMTP, PyOTP for MFA
+7. **Cost Effective**: TOTP MFA is free (no SMS costs!)
 
 ## 🎉 Success Metrics
 
-- ✅ All 10 todo items completed
+- ✅ All features implemented
 - ✅ 100% feature parity with requirements
 - ✅ Brevo SMTP integration working
-- ✅ Vonage SMS MFA functional
+- ✅ TOTP MFA functional (Google Authenticator, etc.)
 - ✅ Questionnaire system operational
 - ✅ Deployment configurations complete
 - ✅ Documentation comprehensive

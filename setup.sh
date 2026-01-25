@@ -40,8 +40,7 @@ if [ ! -f .env ]; then
     echo "⚠️  IMPORTANT: Edit .env file and add your API keys:"
     echo "   - BREVO_API_KEY (required for email)"
     echo "   - SENDER_EMAIL (required for email)"
-    echo "   - VONAGE_API_KEY (optional for MFA)"
-    echo "   - VONAGE_API_SECRET (optional for MFA)"
+    echo "   - MFA works out of the box with authenticator apps!"
     echo ""
 else
     echo "✅ .env file already exists"
