@@ -1,52 +1,82 @@
 {% extends "base.html" %}
 
-{% block title %}Enable SMS MFA - BBA Services{% endblock %}
+{% block title %}Enable MFA - BBA Services{% endblock %}
 
 {% block content %}
 <div class="auth-container">
     <a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
 
-    <h1>📱 Enable SMS MFA</h1>
-
-    {% if step == 2 %}
-    <div class="info-box success">
-        <p>✅ A 6-digit verification code has been sent to <strong>{{ phone }}</strong></p>
-        <p style="margin-bottom: 0; font-size: 14px;">Check your phone and enter the code below.</p>
-    </div>
-
-    <form method="POST" action="{{ url_for('main.enable_mfa') }}" class="auth-form">
-        <input type="hidden" name="phone_hidden" value="{{ phone }}">
-        
-        <div class="form-group">
-            <label for="sms_code">Verification Code</label>
-            <input type="text" id="sms_code" name="sms_code" required maxlength="6" pattern="\d{6}" placeholder="Enter 6-digit code" autofocus>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-large">Verify & Enable MFA</button>
-    </form>
-    {% else %}
-    <p class="subtitle">Add an extra layer of security to your account</p>
+    <h1>🔐 Enable Two-Factor Authentication</h1>
+    <p class="subtitle">Secure your account with an authenticator app</p>
 
     <div class="info-box">
-        <p><strong>How it works:</strong></p>
-        <ol style="margin: 10px 0; padding-left: 20px;">
-            <li>Enter your phone number</li>
-            <li>Receive a verification code via SMS</li>
-            <li>Enter the code to confirm</li>
-            <li>Use SMS codes when logging in</li>
-        </ol>
+        <p><strong>Compatible Apps:</strong></p>
+        <div class="app-icons">
+            <span class="app-badge">Google Authenticator</span>
+            <span class="app-badge">Microsoft Authenticator</span>
+            <span class="app-badge">Authy</span>
+            <span class="app-badge">1Password</span>
+        </div>
+        <p style="margin-top: 15px; font-size: 14px; color: #666;">
+            Any TOTP-compatible authenticator app will work.
+        </p>
     </div>
 
-    <form method="POST" action="{{ url_for('main.enable_mfa') }}" class="auth-form">
-        <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" required placeholder="+1234567890" pattern="\+[0-9]{10,15}" autofocus>
-            <small>Include country code (e.g., +1 for US)</small>
+    <div class="mfa-setup-steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>Open your authenticator app</h3>
+                <p>Download one if you haven't already (Google Authenticator is free)</p>
+            </div>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-large">Send Verification Code</button>
-    </form>
-    {% endif %}
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>Scan this QR code</h3>
+                <div class="qr-container">
+                    <img src="data:image/png;base64,{{ qr_code }}" alt="MFA QR Code" class="qr-code">
+                </div>
+                <details class="manual-entry">
+                    <summary>Can't scan? Enter manually</summary>
+                    <div class="secret-key">
+                        <code>{{ secret }}</code>
+                        <small>Enter this key in your authenticator app</small>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>Enter the 6-digit code</h3>
+                <form method="POST" action="{{ url_for('main.enable_mfa') }}" class="auth-form">
+                    <div class="form-group">
+                        <input type="text" 
+                               id="totp_code" 
+                               name="totp_code" 
+                               required 
+                               maxlength="6" 
+                               pattern="\d{6}" 
+                               placeholder="000000" 
+                               autocomplete="one-time-code"
+                               inputmode="numeric"
+                               autofocus
+                               class="totp-input">
+                        <small>Enter the code shown in your authenticator app</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-large">Verify & Enable MFA</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="security-note">
+        <p><strong>⚠️ Important:</strong> Save a backup of your secret key in a secure location. 
+        If you lose access to your authenticator app, you'll need this key to recover your account.</p>
+    </div>
 </div>
 
 <style>
@@ -69,14 +99,134 @@
     margin: 20px 0;
 }
 
-.info-box.success {
-    background: #d4edda;
-    border-color: #c3e6cb;
-    color: #155724;
+.app-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.info-box ol {
+.app-badge {
+    background: #667eea;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.mfa-setup-steps {
+    margin: 30px 0;
+}
+
+.step {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #eee;
+}
+
+.step:last-child {
+    border-bottom: none;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.step-content {
+    flex: 1;
+}
+
+.step-content h3 {
+    margin: 0 0 10px 0;
     color: #333;
+}
+
+.step-content p {
+    margin: 0;
+    color: #666;
+}
+
+.qr-container {
+    text-align: center;
+    padding: 20px;
+    background: white;
+    border: 2px dashed #ddd;
+    border-radius: 12px;
+    margin: 15px 0;
+}
+
+.qr-code {
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+}
+
+.manual-entry {
+    margin-top: 15px;
+}
+
+.manual-entry summary {
+    cursor: pointer;
+    color: #667eea;
+    font-size: 14px;
+}
+
+.secret-key {
+    margin-top: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.secret-key code {
+    display: block;
+    font-size: 16px;
+    font-family: monospace;
+    letter-spacing: 2px;
+    color: #333;
+    word-break: break-all;
+}
+
+.secret-key small {
+    display: block;
+    margin-top: 8px;
+    color: #666;
+}
+
+.totp-input {
+    font-size: 24px !important;
+    text-align: center;
+    letter-spacing: 8px;
+    font-family: monospace;
+    padding: 15px !important;
+}
+
+.security-note {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.security-note p {
+    margin: 0;
+    color: #856404;
+    font-size: 14px;
 }
 </style>
 {% endblock %}

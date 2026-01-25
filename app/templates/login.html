@@ -20,13 +20,19 @@
 
         {% if require_mfa %}
         <div class="form-group">
-            <label for="sms_code">SMS Code</label>
-            <input type="text" id="sms_code" name="sms_code" required maxlength="6" pattern="\d{6}" placeholder="Enter 6-digit code from SMS" autofocus>
-            <small>A verification code has been sent to your phone.</small>
-        </div>
-
-        <div class="form-footer">
-            <a href="#" onclick="document.getElementById('resend-form').submit(); return false;">Resend Code</a>
+            <label for="totp_code">Authentication Code</label>
+            <input type="text" 
+                   id="totp_code" 
+                   name="totp_code" 
+                   required 
+                   maxlength="6" 
+                   pattern="\d{6}" 
+                   placeholder="000000" 
+                   autocomplete="one-time-code"
+                   inputmode="numeric"
+                   autofocus
+                   class="totp-input">
+            <small>Enter the 6-digit code from your authenticator app (Google Authenticator, Authy, etc.)</small>
         </div>
         {% endif %}
 
@@ -40,11 +46,17 @@
         </p>
         {% endif %}
     </form>
-
-    {% if require_mfa %}
-    <form id="resend-form" method="POST" action="{{ url_for('auth.request_sms_code') }}" style="display: none;">
-        <input type="hidden" name="email" value="{{ email }}">
-    </form>
-    {% endif %}
 </div>
+
+{% if require_mfa %}
+<style>
+.totp-input {
+    font-size: 24px !important;
+    text-align: center;
+    letter-spacing: 8px;
+    font-family: monospace;
+    padding: 15px !important;
+}
+</style>
+{% endif %}
 {% endblock %}

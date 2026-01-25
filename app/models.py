@@ -8,7 +8,7 @@ db = SQLAlchemy()
 
 
 class User(UserMixin, db.Model):
-    """User model with email verification and optional SMS MFA."""
+    """User model with email verification and optional TOTP MFA."""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -20,10 +20,9 @@ class User(UserMixin, db.Model):
     verification_code = db.Column(db.String(6))
     verified_at = db.Column(db.DateTime)
     
-    # SMS MFA
+    # TOTP MFA (Google Authenticator, Microsoft Authenticator, Authy, 1Password)
     mfa_enabled = db.Column(db.Boolean, default=False)
-    phone = db.Column(db.String(20))
-    vonage_request_id = db.Column(db.String(100))  # Temp storage for Vonage verification
+    mfa_secret = db.Column(db.String(32), nullable=True)  # TOTP secret key
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -50,15 +49,15 @@ class User(UserMixin, db.Model):
         self.verified_at = datetime.utcnow()
         self.verification_code = None
     
-    def enable_mfa(self, phone_number):
-        """Enable SMS-based MFA with phone number."""
-        self.phone = phone_number
+    def enable_mfa(self, secret):
+        """Enable TOTP-based MFA with secret key."""
+        self.mfa_secret = secret
         self.mfa_enabled = True
     
     def disable_mfa(self):
         """Disable MFA."""
         self.mfa_enabled = False
-        self.phone = None
+        self.mfa_secret = None
 
 
 class QuestionnaireResponse(db.Model):

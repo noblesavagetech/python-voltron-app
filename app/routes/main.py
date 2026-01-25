@@ -1,10 +1,10 @@
 """Main application routes"""
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from flask_login import login_required, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.models import db, BankAccount, Transaction
-from app.utils.sms import send_sms_code
+from app.utils.totp import generate_totp_secret, get_totp_uri, generate_qr_code, verify_totp_code
 from app.utils.email import send_mfa_enabled_notification
 
 main_bp = Blueprint('main', __name__)
@@ -74,7 +74,7 @@ def dashboard():
 @main_bp.route('/enable-mfa', methods=['GET', 'POST'])
 @login_required
 def enable_mfa():
-    """Enable SMS-based MFA."""
+    """Enable TOTP-based MFA (Google Authenticator, Microsoft Authenticator, Authy, 1Password)."""
     if not current_user.is_verified:
         return redirect(url_for('auth.verify_email'))
     
@@ -83,46 +83,42 @@ def enable_mfa():
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
-        sms_code = request.form.get('sms_code', '').strip()
+        totp_code = request.form.get('totp_code', '').strip()
+        pending_secret = session.get('mfa_secret_pending')
         
-        if sms_code:
-            # Step 2: Verify code and enable MFA
-            phone = request.form.get('phone_hidden')
+        if not pending_secret:
+            flash('Session expired. Please try again.', 'danger')
+            return redirect(url_for('main.enable_mfa'))
+        
+        # Verify the TOTP code
+        if verify_totp_code(pending_secret, totp_code):
+            # SUCCESS: Save to database
+            current_user.enable_mfa(pending_secret)
+            db.session.commit()
             
-            from app.utils.sms import verify_sms_code
+            # Clean up session
+            session.pop('mfa_secret_pending', None)
             
-            if current_user.vonage_request_id and verify_sms_code(current_user.vonage_request_id, sms_code):
-                current_user.enable_mfa(phone)
-                current_user.vonage_request_id = None
-                db.session.commit()
-                
-                # Send confirmation email
-                send_mfa_enabled_notification(current_user.email, phone)
-                
-                flash('SMS MFA enabled successfully!', 'success')
-                return redirect(url_for('main.dashboard'))
-            else:
-                flash('Invalid verification code.', 'danger')
-                return render_template('enable_mfa.html', phone=phone, step=2)
+            # Send confirmation email
+            send_mfa_enabled_notification(current_user.email, 'Authenticator App')
+            
+            flash('MFA enabled successfully! Your account is now more secure.', 'success')
+            return redirect(url_for('main.dashboard'))
         else:
-            # Step 1: Send verification code
-            phone = request.form.get('phone', '').strip()
-            if not phone:
-                flash('Phone number required.', 'danger')
-                return render_template('enable_mfa.html')
-            
-            # Send SMS code via Vonage
-            request_id = send_sms_code(phone, None)
-            if request_id:
-                current_user.vonage_request_id = request_id
-                db.session.commit()
-                flash('Verification code sent to your phone.', 'success')
-                return render_template('enable_mfa.html', phone=phone, step=2)
-            else:
-                flash('Failed to send SMS.', 'danger')
-                return render_template('enable_mfa.html')
+            flash('Invalid verification code. Please try again.', 'danger')
+            # Re-render with the same QR code
+            provisioning_uri = get_totp_uri(pending_secret, current_user.email)
+            qr_code = generate_qr_code(provisioning_uri)
+            return render_template('enable_mfa.html', qr_code=qr_code, secret=pending_secret, step=2)
     
-    return render_template('enable_mfa.html')
+    # GET request: Generate new secret and QR code
+    secret = generate_totp_secret()
+    session['mfa_secret_pending'] = secret
+    
+    provisioning_uri = get_totp_uri(secret, current_user.email)
+    qr_code = generate_qr_code(provisioning_uri)
+    
+    return render_template('enable_mfa.html', qr_code=qr_code, secret=secret, step=2)
 
 
 @main_bp.route('/disable-mfa', methods=['POST'])

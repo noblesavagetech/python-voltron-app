@@ -1,10 +1,10 @@
 """Authentication routes"""
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
 from email_validator import validate_email, EmailNotValidError
 from app.models import db, User
 from app.utils.email import send_verification_email
-from app.utils.sms import send_sms_code
+from app.utils.totp import verify_totp_code
 import random
 
 auth_bp = Blueprint('auth', __name__)
@@ -111,7 +111,7 @@ def resend_verification():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    """Simple login with optional MFA."""
+    """Simple login with optional TOTP MFA."""
     if current_user.is_authenticated:
         if not current_user.is_verified:
             return redirect(url_for('auth.verify_email'))
@@ -120,7 +120,7 @@ def login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
-        sms_code = request.form.get('sms_code', '').strip()
+        totp_code = request.form.get('totp_code', '').strip()
         
         if not email or not password:
             flash('Email and password required.', 'danger')
@@ -134,28 +134,15 @@ def login():
         
         # Check MFA if enabled
         if user.mfa_enabled:
-            if not sms_code:
-                # Send SMS code automatically on first login attempt
-                from app.utils.sms import send_sms_code
-                request_id = send_sms_code(user.phone, None)
-                if request_id:
-                    user.vonage_request_id = request_id
-                    db.session.commit()
-                    flash(f'SMS code sent to your phone ending in {user.phone[-4:]}.', 'success')
-                else:
-                    flash('Failed to send SMS code. Please try again.', 'danger')
+            if not totp_code:
+                # Show TOTP input field
+                flash('Please enter the code from your authenticator app.', 'info')
                 return render_template('login.html', require_mfa=True, email=email)
             
-            # Verify SMS code
-            from app.utils.sms import verify_sms_code
-            
-            if not user.vonage_request_id or not verify_sms_code(user.vonage_request_id, sms_code):
-                flash('Invalid SMS code.', 'danger')
+            # Verify TOTP code
+            if not verify_totp_code(user.mfa_secret, totp_code):
+                flash('Invalid authentication code. Please try again.', 'danger')
                 return render_template('login.html', require_mfa=True, email=email)
-            
-            # Clear request ID after use
-            user.vonage_request_id = None
-            db.session.commit()
         
         login_user(user)
         
@@ -174,31 +161,3 @@ def logout():
     logout_user()
     flash('Logged out successfully.', 'info')
     return redirect(url_for('main.index'))
-
-
-@auth_bp.route('/request-sms-code', methods=['POST'])
-def request_sms_code():
-    """Resend SMS code for MFA login (for users not yet logged in)."""
-    email = request.form.get('email', '').strip()
-    
-    if not email:
-        flash('Email required to resend SMS code.', 'danger')
-        return redirect(url_for('auth.login'))
-    
-    user = User.query.filter_by(email=email).first()
-    
-    if not user or not user.mfa_enabled or not user.phone:
-        flash('Unable to send SMS code.', 'danger')
-        return redirect(url_for('auth.login'))
-    
-    # Send SMS code via Vonage
-    from app.utils.sms import send_sms_code
-    request_id = send_sms_code(user.phone, None)
-    if request_id:
-        user.vonage_request_id = request_id
-        db.session.commit()
-        flash(f'SMS code sent to your phone ending in {user.phone[-4:]}.', 'success')
-    else:
-        flash('Failed to send SMS.', 'danger')
-    
-    return render_template('login.html', require_mfa=True, email=email)

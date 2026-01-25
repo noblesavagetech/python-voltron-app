@@ -20,11 +20,6 @@ class Config:
     SENDER_EMAIL = os.getenv('SENDER_EMAIL')
     SENDER_NAME = os.getenv('SENDER_NAME', 'BBA Services')
     
-    # SMS Settings (Vonage Verify API for 2FA)
-    VONAGE_API_KEY = os.getenv('VONAGE_API_KEY')
-    VONAGE_API_SECRET = os.getenv('VONAGE_API_SECRET')
-    VONAGE_BRAND_NAME = os.getenv('VONAGE_BRAND_NAME', 'BBA Services')
-    
     # Plaid Settings
     PLAID_CLIENT_ID = os.getenv('PLAID_CLIENT_ID')
     PLAID_SECRET = os.getenv('PLAID_SECRET')

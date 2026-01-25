@@ -1,0 +1,311 @@
+End Users
+End User Privacy Policy
+Available languages:
+
+Française - Politique de confidentialité pour utilisateur final
+
+Español - Política de privacidad aplicable al usuario final
+
+Nederlands - Privacybeleid voor eindgebruikers
+
+Deutsche - Datenschutzerklärung für Endbenutzer
+
+
+
+Effective Date: December 8, 2025
+
+Our mission at Plaid is to unlock financial freedom for everyone. Privacy and security are very important to us.
+
+This End User Privacy Policy (“Policy”) is meant to help you (the “end user”) understand how we at Plaid collect, use, and share your data when you use Plaid products or services - for example, when you use Plaid Portal, or when you use Plaid to connect and share your data to power the applications (“apps”) you use. These apps, which offer many consumer services and products such as helping you save for retirement, manage your spending, streamline credit applications, or transfer money, are built and provided by our business customers (we’ll call them “developers” here), and powered by Plaid.
+
+This Policy applies to Plaid Inc., Plaid Financial Ltd., and Plaid, B.V. (collectively, “Plaid,” “we,” “our,” and “us”). Please see the“Contacting Plaid” section below for which of these entities is responsible for processing your data.
+
+Other Policies:
+
+For information about services offered by Plaid Consumer Reporting Agency, Inc. ("Plaid CRA"), and how it processes data, please see the CRA Privacy Policy.
+
+For information about how Plaid processes data we collect through our websites or when you interact with Plaid outside of using our products or services, such as when you email Plaid directly, please see our All Audience Privacy Statement and Cookie Policy.
+
+For information about how Plaid treats photos and/or video images of your face that you may provide when using our services, including scans of facial geometry extracted from those images, which may be considered biometric data in some jurisdictions, please see Plaid's Biometric Policy and Release.
+
+In addition, this Policy does not cover what developers of the apps you use do with your data. You should review the privacy policies or terms of service for those apps for information about their practices.
+
+You should read this Policy carefully, it contains important information about your privacy rights and choices.
+
+Jump to section:
+
+Our Data Practices
+
+Data We Collect and Categories of Sources
+
+How We Use Your Data
+
+Our Lawful Bases for Processing (EEA and UK End Users)
+
+How We Share Your Data
+
+Our Retention and Deletion Practices
+
+Protection of Data
+
+Some Final Details…
+
+International Data Transfers
+
+Your Data Protection Rights
+
+Your Additional Privacy Controls
+
+Changes To This Policy
+
+Contacting Plaid
+
+Summaries of Processing Activities
+
+Summary of Processing Activities by Category of Information
+
+Summary of Processing Activities by Product
+
+Our Data Practices
+Plaid is committed to providing end users with meaningful control over their data. This section describes Plaid’s data practices relating to our processing of data about you. We also provide summaries of our practices organized by category of data collected and by product at the end of this Policy in the Summaries of Processing Activities section.
+
+Plaid’s services are not directed to individuals under 18 and we do not knowingly collect data relating to children.
+
+Data We Collect and Categories of Sources
+As described in more detail below, the data we collect, use, and share depends on the Plaid products and services that you, and/or the app you have connected to, use. Depending on which of Plaid’s products or services you or your app use, Plaid may collect the following:
+
+Data you provide to us;
+
+Data from financial institutions when you connect your financial account;
+
+Data from the electronic device you use to connect your financial account using Plaid or to otherwise interact with Plaid;
+
+Data from the developer of the app you have connected to;
+
+Data from our affiliates to provide support to you or to provide you with a better user experience; and/or
+
+Data from other sources, including service providers and identity verification and fraud prevention services.
+
+Data you provide to us. When you use Plaid’s products or services (like when you use Plaid to connect your financial accounts to an app), we collect the following data from you as needed to power your particular app or Plaid product or service:
+
+identifiers like name, email address, date of birth, Social Security number, and phone number;
+
+login data when required by the provider of your account, like your username and password, account and routing number, or a security token;
+
+any additional information needed to connect your accounts, including security questions and answers, and one-time passwords (OTP);
+
+information from documents or statements that you provide to Plaid, like bank statements or pay stubs; and/or
+
+information related to your use of our services, including which of our services you use, the dates and times of your use, and which financial institutions and apps you connect using Plaid.
+
+When you provide login data and additional information needed to connect your accounts, you also give Plaid permission and authority to act on your behalf to access and transmit data to and from your financial institution.
+
+We may also collect certain documentation that contains your photograph or we may require you to verify your identity by providing a photograph or video of yourself, for more information please see Plaid's Biometric Policy and Release. Data collected in this context may be considered biometric data in some states or countries. See the special notice for Illinois and Texas residents, below.
+
+Special Biometric Data Notice for Illinois and Texas Residents
+
+For residents of Illinois or Texas, if we require you to provide us with any document that contains your photograph or if you need to verify your identity by providing a photograph or video of yourself, the data derived from your face that we collect and process, and that our service providers collect and process on our behalf, may be considered biometric data in some places. Your data will be stored no longer than three years, unless otherwise required by law.
+
+Data we collect from financial institutions about and from your accounts. Depending on which Plaid products or services you, or the developer of your app use, as well as what, and how information is made available, we may collect the following data from your financial institutions:
+
+Account data, including financial institution name, account name, account type, account ownership, branch number, IBAN, BIC, account number, routing number, and sort code;
+
+Data about an account balance, including current and available balance;
+
+Data about credit accounts, including due dates, balances owed, payment amounts and dates, transaction history, credit limit, repayment status, and interest rate;
+
+Data about loan accounts, including due dates, repayment status, balances, payment amounts and dates, interest rate, guarantor, loan type, payment plan, and terms;
+
+Data about investment accounts, including transaction information, type of asset, identifying details about the asset, quantity, price, fees, and cost basis;
+
+Identifiers and data about the account owner(s), including name, email address, phone number, date of birth, and address information;
+
+Data about account transactions, including amount, date, payee, type, quantity, price, location, involved securities, and a description of the transaction; and/or
+
+Data from your payroll and tax documents, including data about your income and employer, in cases where you've connected your payroll accounts or provided us with your pay stub or tax form information.
+
+Depending on the Plaid service you or the developer of your app use, and the manner in which the data is made available, the data collected from your financial accounts may include data from all accounts (e.g., checking, savings, credit card, and joint accounts) accessible through a single set of account credentials. For more specifics about data collected in connection with different products and services, see Summary of Processing Activities by Product.
+
+Data we receive from your devices. When you use a device, like your smartphone, tablet, or computer, to interact with our services (including through a developer’s app), we may collect the following data about that device:
+
+internet protocol (IP) address;
+
+timezone setting and location, device location;
+
+hardware model and operating system;
+
+features within our services you access;
+
+browser data;
+
+network data; and
+
+other technical data about the device (such as settings and preferences).
+
+Data we receive about you from the developers of apps powered by Plaid. When needed for Plaid to provide a service (like verifying your identity, protecting against fraud or risk, or enabling a bank transfer), the developers of the apps you use may provide us with identifiers and commercial information about you, like your name, Social Security number, email address, phone number, or information about your financial accounts and transactions.
+
+Data from our affiliates to provide support to you or to provide you with a better user experience. We may collect data from our affiliates (these are companies related to us by common ownership or control) to provide support to you or improve your experience. For example, if you elect for Plaid CRA to remember financial accounts associated with your phone number, we may collect the following data from Plaid CRA in order to help you connect to your accounts faster when using our services:
+
+identifiers like name, email address, and phone number;
+
+login data when required by the provider of your account, like your username and password, bank name, account and routing number, or a security token;
+
+when needed, data to help verify your identity and connect your accounts, including your date of birth, security questions and answers, and one-time password (OTP); and/or
+
+data from your device (as explained in more detail above).
+
+Data we receive about you from other sources. When needed to provide a service, identify your device, or to help prevent fraud, abuse, or security threats, we may also receive data about you directly from third parties, including your wireless carrier, agents and our service providers.
+
+Information we derive from the data we collect. We may derive additional information about you from the data we collect. For example, we may infer your geolocation, your annual income, or the type of account or subaccount you’ve chosen to connect―such as when you connect your loan accounts, so we can let the developer know whether the account is for a mortgage, student loan, or credit card.
+
+How We Use Your Data
+We use your data for the following business and commercial purposes:
+
+Provide Services: To operate, provide, service, assess, process, and maintain our products and services, including to remember you or your device when you return to use our services.
+
+Develop Existing Services: To improve, enhance, modify, add to, and further develop our services.
+
+Help Prevent Fraud, Verify Your Identity, or Protect Privacy: To verify your identity and help protect you, developers, our partners, Plaid, and others from and prevent actual or potential fraud, unauthorized transactions, claims, other liabilities, malicious activity, and other privacy and security-related concerns.
+
+Develop New Services: To develop new products, features, technologies and services that benefit you and the apps you use, including to develop, train, test, and deploy artificial intelligence ("AI") systems.
+
+Develop Insights: To develop insights based on the data we've collected about you. This includes your transaction data, other financial data, data about which financial accounts you have connected to which apps, and data from other sources, to help us, your financial institutions, and the developers of your connected apps provide services and/or a better user experience to you, like providing you with a faster connection and onboarding experience or faster access to your funds, helping to detect and prevent potentially fraudulent activity, or personalizing their services to you.
+
+Provide Support: To provide support to you or to developers, including to help respond to your inquiries related to our services or developers' apps.
+
+Communicate With You: To communicate with you and send you things like technical notices, updates, security alerts, and messages.
+
+Investigate Misuse and Misconduct: To investigate any misuse of our service or developers' apps, including violations of our Developer Policy, criminal activity, or other unauthorized access to our services.
+
+For Legal Purposes: To comply with contractual and legal obligations under applicable law and for other legal purposes such as to establish and defend against claims.
+
+With Your Consent: For other notified purposes with your consent or at your direction.
+
+We also collect, use, and share data that has been aggregated, de-identified, or anonymized in a manner that does not identify you personally for any purpose permitted under applicable law. This includes creating or using aggregated, de-identified, or anonymized data to develop new products or services, to facilitate research, and to help us or our customers assess the speed, accuracy, performance, and/or security of our services.
+
+Our Lawful Bases for Processing (EEA and UK End Users)
+For individuals in the European Economic Area (“EEA”) or the United Kingdom (“UK”), Plaid only processes your personal data when we have a valid legal basis to do so. Our legal basis for processing the data we collect will depend on what data we collected and the purpose for processing it. Generally, we will only collect and process your data where:
+
+we are bound by any contract or agreement with you (for example, to comply with our end user services agreements) and must adhere to various legal requirements when offering regulated services, including our account information and payment services.
+
+we require your data to comply with our legal obligations under applicable law, to safeguard Plaid's legal rights, and to prevent and identify criminal activities such as money laundering and fraud. For these purposes, Plaid may find it necessary to share your personal data with entities such as courts, law enforcement agencies, and providers of anti-money laundering services;
+
+processing is necessary for our legitimate interests to effectively maintain the integrity of our services. This includes retrieving account information or providing payment initiation services (as well as verifying the output of this activity), engaging in communication with you, and ensuring that Plaid, as a regulated entity, upholds the expected standards (including those stipulated by the Financial Conduct Authority for Plaid Financial Ltd and De Nederlandsche Bank for Plaid B.V).; or
+
+you have given your consent to do so.
+
+To the extent we rely on consent to collect and process your data, you have the right to withdraw your consent at any time per the instructions provided in this Policy.
+
+How We Share Your Data
+As permitted by law, we may share your data as follows:
+
+With the developer of the app you are using and as directed by that developer;
+
+With the financial institutions you connect to Plaid or to an app using Plaid;
+
+To enforce any contract with you;
+
+With our data processors and other service providers, partners, agents, or contractors in connection with the services they perform for us or developers;
+
+If we believe in good faith that disclosure is appropriate or required to comply with applicable law, regulation, or legal process (like a court order or subpoena);
+
+In connection with a change in ownership or control of all or a part of our business (like a merger, acquisition, reorganization, or bankruptcy);
+
+Between and among Plaid and our current and future parents, affiliates, subsidiaries and other companies under common control or ownership;
+
+As we believe reasonably appropriate to protect against and prevent actual or potential fraud, unauthorized transactions, claims, other liabilities, or otherwise protect the rights, privacy, safety, or property of you, developers, our partners, Plaid, and others; or
+
+For any other notified purpose with your consent or at your direction.
+
+(For US users) We do not share your data with non-affiliated third parties except as permitted by law (as authorized by 12 C.F.R. § 1016.13, 1016.14, and 1016.15).
+
+When you link your financial accounts through Plaid, we typically use Google’s reCAPTCHA service to help detect fraud and abuse. Google reCAPTCHA is integrated into Plaid products and services in order to ensure that entries made in online forms, for example, are actually made by real persons and are not automated by software (or bots).
+
+Google reCAPTCHA analyzes the behavior of users of our products and services using different characteristics. Google reCAPTCHA processes personal data such as your IP address, your length of stay on our website and further information about your use of Plaid products and services. This data will be transmitted and stored by Google on servers in the United States and other countries. Google has certified with the EU-US Data Privacy Framework; the certificate is available here. When reCAPTCHA is used, Google's Privacy Policy and Terms of Use apply to reCAPTCHA and information Google collects through reCAPTCHA.
+
+We only share your personal financial data with third parties to power the services you requested, when you consent, and/or to protect against actual or potential fraud, unauthorized transactions, claims, other liabilities, malicious activity, and other privacy and security-related concerns.
+
+We may collect and share cookie data with third parties when you visit our website, or we may allow third parties to collect this cookie data from our sites. Please see our Cookie Policy and All Audiences Privacy Policy for more details.
+
+Our Retention and Deletion Practices
+We retain your data only as long as it is needed. To determine whether the data is needed, we consider the reason your data was collected and used and any legal requirements to hold onto your data. We review your data periodically to ensure it is still needed to fulfill the purpose for which it was collected or any other legal requirements. If a developer removes your connection from their app to your data, Plaid’s systems are designed to automatically delete your personal data, subject to certain exceptions where we may still retain your information.
+
+The exceptions to this may be if: (a) you've established a connection with another developer's app through Plaid that is still active; (b) Plaid needs your data to continue providing you with a Plaid product or service you requested; (c) Plaid is required by law to keep your data; (d) Plaid needs your data to help protect against or prevent fraud or protect privacy, provide support, or investigate misuse and misconduct; (e) Plaid has aggregated, de-identified, or anonymized your data such that it cannot be reasonably reidentified; or (f) we request - and you specifically agree - to allow us to retain your data longer.
+
+Your data will only be processed as required by law or in accordance with this Policy.
+
+Please refer to the “Your Data Protection Rights” section of this Policy for options that may be available to you, including how to request deletion of your data. The “Your Additional Privacy Controls” section of this Policy also provides details about tools available to you to help you view and manage the connections you’ve made using Plaid. You can also contact us about our data retention practices using the contact information in the “Contacting Plaid” section below.
+
+Protection of Data
+Plaid’s security policies and practices are designed to protect the confidentiality and integrity of your data. Plaid implements controls designed to limit access to this data to personnel who have a business reason to know it and prohibits its personnel from unlawfully accessing, using or disclosing this data.
+
+Some Final Details
+International Data Transfers
+We operate internationally, and so we transfer the data we collect about you across international borders for processing and storage (for example, we transfer data from the EEA and UK to the United States and store data in AWS regions located in the United States). When we transfer data to a different country or territory, we follow applicable data protection laws in doing so. In particular, when we transfer data from the EEA or UK across other international borders, we rely on adequacy decisions, data transfer agreements, or other EU Commission- or UK Secretary of State-approved (as applicable) mechanisms for such transfers, including standard contractual clauses. You can ask for a copy of these standard contractual clauses by contacting us as set out below. Prior to transferring data from the EEA or UK, we carry out transfer impact assessments and implement any supplementary measures to ensure any data transferred will be maintained in accordance with EEA and UK requirements.
+
+Your Data Protection Rights
+Regardless of where you live, we will honor the following rights related to your personal data, subject to some limitations and exceptions provided by law, and you will not be discriminated against for exercising them:
+
+Access data collected about you;
+
+Request access to more details about the categories and specific pieces of personal information we may have collected about you in the last 12 months (including personal information disclosed for business purposes);
+
+Request, under certain circumstances, that we rectify or update your data that is inaccurate or incomplete;
+
+Request, under certain circumstances, that we erase or restrict the processing of your data;
+
+Object to our processing of your data under certain conditions provided by law;
+
+Where processing of your data is based on consent, withdraw that consent;
+
+Request that we provide data collected about you in a structured, commonly used and machine-readable format so that you can transfer it to another company, where technically feasible.
+
+Please note that for an official record of your financial information you should make that request directly to your financial institution.
+
+Depending on where you live, you may have the right to lodge a complaint. We welcome and appreciate the chance to address any concerns you may have and encourage you to contact us. In addition, and depending on your jurisdiction, you may have the right to make a complaint at any time to your (data protection) supervisory authority. For end users in the EEA, you can find contact information for the European Data Protection Board (EDPB) on the EDPB’s website. For end users in the UK, you can find contact information for the Information Commissioner's Office (ICO) on the ICO’s website. For end users in Switzerland this is the Federal Data Protection and Information Commissioner.
+
+To exercise any rights you have, you can submit a request using our online form. You can also contact us as described in the “Contacting Plaid” section below to exercise any of your data protection rights. You may be required to provide additional information necessary to confirm your identity before we can respond to your request.
+
+If we receive your request from an authorized agent, we may ask for evidence that the agent has valid written authority, like a power of attorney, to submit requests on your behalf.
+
+We will consider requests and provide our response within a reasonable period of time (and within any time period required by applicable law). Please note, however, that certain data may be exempt from such requests, for example if we need to keep the data to comply with our own legal obligations or to establish, exercise, or defend legal claims.
+
+Your Additional Privacy Controls
+Plaid developed the Plaid Portal to provide you with a convenient, centralized way to view and manage the connections you’ve made using Plaid.
+
+If you’re located in the U.S., you can sign up for Plaid Portal by visiting my.plaid.com, verifying your phone number and email address, and creating a password. Once you’ve signed up for Plaid Portal, you’ll be directed to a dashboard that can show you financial accounts you’ve connected to your chosen apps using Plaid, and the types of data shared with those apps. Additionally, the Plaid Portal provides you with controls to terminate the connection between apps and your financial accounts and delete associated data stored in Plaid’s systems.
+
+Changes To This Policy
+We update or change this Policy from time to time. If we make any updates or changes, we will post the new policy on Plaid's website at https://plaid.com/legal and update the effective date at the top of this Policy. We will also notify developers of any material changes in accordance with our developer agreements, as they may be better positioned to notify you about changes to this Policy. If we have an email address for you, we will also send you an email notifying you of the update.
+
+Contacting Plaid
+If you have any questions or complaints about this Policy, or about our privacy practices generally, you can contact us at privacy@plaid.com or by mail at:
+
+If you reside outside the EEA or UK:
+
+Plaid Inc.
+Attn: Legal
+PO Box 7775 #35278
+San Francisco, California 94120-7775
+U.S.A.
+
+
+For both Plaid Financial Ltd. and Plaid, B.V. we have appointed a data protection officer (DPO) who is also responsible for overseeing questions in relation to this Policy and can be contacted via email at privacy@plaid.com .
+
+
+If you reside in the UK:
+
+Plaid Financial Ltd.
+Attn: Legal
+New Penderel House, 4th Floor
+283-288 High Holborn
+London, United Kingdom, WC1V 7HP
+
+If you reside in the EEA:
+
+Plaid, B.V.
+Attn: Legal
+Muiderstraat 1
+1011PZ Amsterdam
+The Netherlands
+
