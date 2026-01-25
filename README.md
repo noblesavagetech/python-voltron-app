@@ -1,18 +1,18 @@
 # BBA Services - Financial Health Assessment Platform
 
-A Flask web application featuring secure email verification, optional SMS-based MFA, financial health questionnaire, and bank account integration via Plaid.
+A Flask web application featuring secure email verification, optional TOTP-based MFA, financial health questionnaire, and bank account integration via Plaid.
 
 ## ✨ Features
 
-- 🔐 **Secure Authentication**: Email verification via Brevo + optional SMS MFA via Vonage
+- 🔐 **Secure Authentication**: Email verification via Brevo + optional TOTP MFA
 - 📊 **Health Assessment**: Complete financial health questionnaire during signup
 - 🏦 **Bank Integration**: Connect bank accounts via Plaid for transaction tracking
 - 💰 **Financial Dashboard**: View balances, transactions, and spending analytics
 - 📧 **Email Integration**: Brevo SMTP API for reliable email delivery  
-- 📱 **SMS MFA**: Vonage Verify API for two-factor authentication
+- 🔑 **TOTP MFA**: Works with Google Authenticator, Microsoft Authenticator, Authy, 1Password
 - 🏛️ **Production Ready**: PostgreSQL database with SQLite fallback
 - 🚀 **Railway Deployment**: Optimized for cloud deployment
-- 🔒 **Security First**: Password hashing, secure sessions, CSRF protection
+- 🔒 **Security First**: Password hashing, secure sessions, CSRF protection, NIST-compliant MFA
 
 ## 🔄 User Flow
 
@@ -22,7 +22,7 @@ A Flask web application featuring secure email verification, optional SMS-based 
 4. **Dashboard** → View health score and insights
 5. **Link Bank Account** → Connect accounts via Plaid Link
 6. **Track Finances** → View transactions and spending analytics
-7. **Optional MFA** → Enable SMS 2FA for enhanced security
+7. **Optional MFA** → Enable TOTP 2FA with your favorite authenticator app
 
 ## 🚀 Quick Start
 
@@ -63,8 +63,6 @@ railway link
 # PLAID_CLIENT_ID (from Plaid dashboard)
 # PLAID_SECRET (from Plaid dashboard)
 # PLAID_ENV (sandbox/development/production)
-# VONAGE_API_KEY (optional, for MFA)
-# VONAGE_API_SECRET (optional, for MFA)
 
 # Deploy
 railway up
@@ -88,9 +86,6 @@ PLAID_COUNTRY_CODES=US
 
 # Optional  
 SENDER_NAME="BBA Services"
-VONAGE_API_KEY=your-vonage-key
-VONAGE_API_SECRET=your-vonage-secret
-VONAGE_BRAND_NAME="BBA Services"
 FLASK_ENV=production
 ```
 
@@ -105,7 +100,7 @@ FLASK_ENV=production
 │   │   └── plaid.py         # Plaid bank linking routes
 │   ├── utils/
 │   │   ├── email.py         # Brevo email utilities
-│   │   ├── sms.py           # Vonage SMS utilities
+│   │   ├── totp.py          # TOTP MFA utilities (QR code generation)
 │   │   └── plaid_service.py # Plaid API integration
 │   ├── templates/           # Jinja2 HTML templates
 │   │   ├── base.html
@@ -136,7 +131,8 @@ FLASK_ENV=production
 - **Password Security**: Werkzeug password hashing with salt
 - **Session Security**: HTTPOnly, Secure, SameSite cookies  
 - **Email Verification**: 6-digit codes via Brevo
-- **Optional SMS MFA**: Vonage Verify API with automatic voice fallback
+- **TOTP MFA**: RFC 6238 compliant, works with all major authenticator apps
+- **NIST Compliant**: TOTP recommended over SMS per NIST SP 800-63B
 - **CSRF Protection**: Built-in Flask-Login protection
 - **Input Validation**: Email validation & sanitization
 
@@ -159,7 +155,7 @@ FLASK_ENV=production
 ### Users Table
 - id, email, password_hash
 - is_verified, verification_code, verified_at
-- mfa_enabled, phone, vonage_request_id
+- mfa_enabled, mfa_secret (TOTP secret key)
 - created_at, updated_at
 
 ### Questionnaire Responses Table
@@ -196,7 +192,7 @@ The questionnaire includes 8 questions covering:
 | `/auth/logout` | GET | User logout |
 | `/questionnaire/take` | GET/POST | Take health assessment |
 | `/dashboard` | GET | Protected dashboard |
-| `/enable-mfa` | GET/POST | Enable SMS MFA |
+| `/enable-mfa` | GET/POST | Enable TOTP MFA |
 | `/disable-mfa` | POST | Disable MFA |
 
 ## 🧪 Testing Emails
@@ -212,15 +208,15 @@ The questionnaire includes 8 questions covering:
    SENDER_EMAIL=your_verified_email@example.com
    ```
 
-### Vonage Setup (Optional)
+### TOTP MFA (Built-in)
 
-1. Sign up at https://dashboard.nexmo.com/
-2. Get API Key and API Secret from dashboard
-3. Add to `.env`:
-   ```
-   VONAGE_API_KEY=your_api_key
-   VONAGE_API_SECRET=your_api_secret
-   ```
+TOTP MFA requires no external service configuration. Users can enable it from their dashboard using any authenticator app:
+
+- **Google Authenticator** (iOS/Android)
+- **Microsoft Authenticator** (iOS/Android)
+- **Authy** (iOS/Android/Desktop)
+- **1Password** (iOS/Android/Desktop)
+- Any RFC 6238 TOTP-compatible app
 
 ## 🐳 Docker Deployment
 
@@ -244,7 +240,7 @@ docker-compose down
 - ✅ Test email delivery in production environment
 - ✅ Set up automated backups for database
 - ✅ Monitor application logs and performance
-- ✅ (Optional) Configure Vonage for SMS MFA
+- ✅ TOTP MFA works out of the box (no external config needed)
 
 ## 🐛 Troubleshooting
 
@@ -263,9 +259,9 @@ docker-compose down
 - Check `DATABASE_URL` format: `postgresql://user:pass@host:port/db`
 
 **MFA issues:**
-- Verify Vonage API credentials
-- Check phone number format (E.164: +1234567890)
-- Ensure sufficient Vonage account balance
+- Ensure user's device clock is synchronized (TOTP is time-based)
+- Try entering the code immediately after it refreshes
+- If locked out, database admin can reset mfa_enabled to false
 
 ## 📄 Key Differences from Reference Apps
 
@@ -273,7 +269,7 @@ This application combines features from both reference repositories:
 
 1. **From python-webapp-plaid-mfa:**
    - ✅ Email verification via Brevo
-   - ✅ Optional SMS MFA via Vonage
+   - ✅ Optional TOTP MFA (Google Authenticator, Authy, etc.)
    - ✅ Session-based authentication
    - ✅ PostgreSQL/SQLite support
 
@@ -294,7 +290,7 @@ This application combines features from both reference repositories:
 - **Backend**: Flask 3.0, SQLAlchemy, Flask-Login
 - **Database**: PostgreSQL (production), SQLite (development)
 - **Email**: Brevo (SendinBlue) SMTP API
-- **SMS**: Vonage Verify API
+- **MFA**: PyOTP (TOTP), QRCode for authenticator app setup
 - **Deployment**: Railway, Docker, Gunicorn
 - **Frontend**: Jinja2 templates, custom CSS
 
